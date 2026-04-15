@@ -10,8 +10,8 @@ from transformers import (
 )
 from tqdm import tqdm
 
-from utils.constants import DEFAULT_MODEL, DEFAULT_DATASET, DEFAULT_DATASET_FILE
-from utils.data import load_lid_dataset, build_training_sample
+from lid.constants import DEFAULT_MODEL, DEFAULT_DATASET, DEFAULT_DATASET_FILE
+from lid.data import load_lid_dataset, build_training_sample
 
 
 class LIDDataset(Dataset):

@@ -17,15 +17,17 @@ build/
 *.pkl
 *.pickle
 
-lang_plots/
 outputs/
 checkpoints/
 wandb/
 runs/
 logs/
+lang_plots/
 
 .env
 .env.*
+
+.venv/
 
 .vscode/
 .idea/
@@ -34,4 +36,7 @@ logs/
 *~
 .DS_Store
 
-LID_Inference_Vibecoded.ipynb
+notebooks/*.ipynb
+!notebooks/.gitkeep
+
+experiments/results/

@@ -8,9 +8,9 @@ import pandas as pd
 import torch
 from tqdm import tqdm
 
-from utils.constants import DEFAULT_MODEL, DEFAULT_DATASET, DEFAULT_DATASET_FILE, VALID_OPTIONS
-from utils.data import load_lid_dataset
-from utils.model import load_model_and_tokenizer, batched_layer_text_outputs
+from lid.constants import DEFAULT_MODEL, DEFAULT_DATASET, DEFAULT_DATASET_FILE, VALID_OPTIONS
+from lid.data import load_lid_dataset
+from lid.model import load_model_and_tokenizer, batched_layer_text_outputs
 
 
 def parse_args():

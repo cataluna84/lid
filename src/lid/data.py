@@ -1,7 +1,7 @@
 import pandas as pd
 from datasets import load_dataset
 
-from utils.constants import (
+from lid.constants import (
     DEFAULT_DATASET,
     DEFAULT_DATASET_FILE,
     LANG_CODES_BLOCK,

@@ -3,7 +3,7 @@ import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from utils.constants import DEFAULT_MODEL, VALID_OPTIONS
+from lid.constants import DEFAULT_MODEL, VALID_OPTIONS
 
 
 def load_model_and_tokenizer(

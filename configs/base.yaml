@@ -1,0 +1,24 @@
+model: CohereLabs/tiny-aya-global
+dataset: 1024m/LID
+dataset_file: Data_Hackathon/LID-500.parquet
+sample_frac: 0.1
+random_state: 1024
+
+training:
+  epochs: 3
+  batch_size: 4
+  lr: 2.0e-5
+  warmup_steps: 100
+  max_length: 512
+  grad_accum: 4
+  val_split: 0.1
+  use_lora: true
+  lora_r: 16
+  lora_alpha: 32
+
+inference:
+  batch_size: 16
+  temperature: 0.2
+  max_length: 512
+
+quantization: null  # null | 4bit | 8bit
