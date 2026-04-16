@@ -1,0 +1,22 @@
+meta:
+  name: "step6-quantized"
+  wandb_project: "lid-bench"
+  dataset: "1024m/LID"
+  dataset_file: "Data_Hackathon/LID-500.parquet"
+  n_samples: 3350
+  warmup_batches: 2
+  repeat: 3
+  seed: 1024
+  profile: false
+
+grid:
+  strategy: [quantized_int8, quantized_int4]
+  dtype: [fp16]
+  batch_size: [16, 32, 64]
+  max_length: [512]
+
+exclude: []
+
+fixed:
+  model: "CohereLabs/tiny-aya-global"
+  temperature: 0.2

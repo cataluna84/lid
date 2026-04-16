@@ -1,0 +1,27 @@
+meta:
+  name: "quick-test"
+  wandb_project: "lid-bench"
+  dataset: "1024m/LID"
+  dataset_file: "Data_Hackathon/LID-500.parquet"
+  n_samples: 500
+  warmup_batches: 1
+  repeat: 1
+  seed: 1024
+  profile: false
+
+grid:
+  strategy:
+    - eager
+    - vectorized
+  dtype:
+    - fp16
+  batch_size:
+    - 16
+  max_length:
+    - 512
+
+exclude: []
+
+fixed:
+  model: "CohereLabs/tiny-aya-global"
+  temperature: 0.2

@@ -7,6 +7,7 @@ from lid.constants import (
     LANG_CODES_BLOCK,
     LANG_TO_ISO,
     TASK_DESCRIPTION,
+    VALID_OPTIONS,
 )
 
 
@@ -51,6 +52,24 @@ def load_lid_dataset(
             .reset_index(drop=True)
         )
 
+    df["INSTRUCT"] = df["text"].apply(build_instruct_prompt)
+
+    return df
+
+
+def load_commonlid_dataset(
+    token: str | None = None,
+    valid_isos: list[str] | None = None,
+) -> pd.DataFrame:
+    """Load CommonLID test set, filtered to our 67 ISO classes."""
+    ds = load_dataset("commoncrawl/CommonLID", split="test", token=token)
+    df = ds.to_pandas()
+
+    if valid_isos is None:
+        valid_isos = VALID_OPTIONS
+
+    df = df[df["tag"].isin(valid_isos)].reset_index(drop=True)
+    df = df.rename(columns={"tag": "ISO-693-3"})
     df["INSTRUCT"] = df["text"].apply(build_instruct_prompt)
 
     return df

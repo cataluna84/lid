@@ -1,0 +1,22 @@
+meta:
+  name: "step3-vectorized"
+  wandb_project: "lid-bench"
+  dataset: "1024m/LID"
+  dataset_file: "Data_Hackathon/LID-500.parquet"
+  n_samples: 3350
+  warmup_batches: 2
+  repeat: 3
+  seed: 1024
+  profile: false
+
+grid:
+  strategy: [vectorized]
+  dtype: [fp16]
+  batch_size: [8, 16, 32]
+  max_length: [256, 512]
+
+exclude: []
+
+fixed:
+  model: "CohereLabs/tiny-aya-global"
+  temperature: 0.2

@@ -1,3 +1,9 @@
-from lid.constants import LANG_TO_ISO, VALID_OPTIONS, DEFAULT_MODEL
-from lid.data import load_lid_dataset, build_instruct_prompt
-from lid.model import load_model_and_tokenizer, batched_layer_text_outputs, layer_text_outputs
+from lid import bench as bench
+from lid.constants import DEFAULT_MODEL as DEFAULT_MODEL
+from lid.constants import LANG_TO_ISO as LANG_TO_ISO
+from lid.constants import VALID_OPTIONS as VALID_OPTIONS
+from lid.data import build_instruct_prompt as build_instruct_prompt
+from lid.data import load_lid_dataset as load_lid_dataset
+from lid.model import batched_layer_text_outputs as batched_layer_text_outputs
+from lid.model import layer_text_outputs as layer_text_outputs
+from lid.model import load_model_and_tokenizer as load_model_and_tokenizer

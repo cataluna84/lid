@@ -1,0 +1,32 @@
+program: src/lid/bench/runner.py
+method: grid
+metric:
+  name: throughput_sps
+  goal: maximize
+parameters:
+  strategy:
+    values:
+      - eager
+      - vectorized
+      - compiled
+      - flash_attn
+      - sdpa
+      - quantized_int8
+      - quantized_int4
+      - combined_flash_compiled
+      - combined_flash_int8
+  dtype:
+    values:
+      - fp16
+      - bf16
+  batch_size:
+    values:
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+  max_length:
+    values:
+      - 256
+      - 512

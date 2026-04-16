@@ -36,7 +36,4 @@ lang_plots/
 *~
 .DS_Store
 
-notebooks/*.ipynb
-!notebooks/.gitkeep
-
 experiments/results/

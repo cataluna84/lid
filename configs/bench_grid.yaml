@@ -1,0 +1,44 @@
+meta:
+  name: "lid-bench-v1"
+  wandb_project: "lid-bench"
+  dataset: "1024m/LID"
+  dataset_file: "Data_Hackathon/LID-500.parquet"
+  n_samples: 3350
+  warmup_batches: 2
+  repeat: 3
+  seed: 1024
+  profile: false
+
+grid:
+  strategy:
+    - eager
+    - vectorized
+    - compiled
+    - flash_attn
+    - sdpa
+    - quantized_int8
+    - quantized_int4
+    - combined_flash_compiled
+    - combined_flash_int8
+  dtype:
+    - fp16
+    - bf16
+  batch_size:
+    - 4
+    - 8
+    - 16
+    - 32
+    - 64
+  max_length:
+    - 256
+    - 512
+
+exclude:
+  - {strategy: quantized_int4, dtype: bf16}
+  - {strategy: quantized_int8, dtype: bf16}
+  - {strategy: eager, batch_size: 64}
+  - {strategy: compiled, batch_size: 4}
+
+fixed:
+  model: "CohereLabs/tiny-aya-global"
+  temperature: 0.2

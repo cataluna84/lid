@@ -1,4 +1,4 @@
-.PHONY: install dev lint format typecheck test clean train infer visualize
+.PHONY: install dev lint format typecheck test clean train infer visualize bench bench-quick
 
 install:
 	uv sync
@@ -31,3 +31,9 @@ infer:
 
 visualize:
 	uv run lid-visualize $(ARGS)
+
+bench:
+	uv run lid-bench configs/bench_grid.yaml $(ARGS)
+
+bench-quick:
+	uv run lid-bench configs/bench_quick.yaml --no-wandb $(ARGS)
