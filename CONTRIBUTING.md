@@ -6,7 +6,7 @@ Thank you for your interest in contributing to the Layer-Wise LID research proje
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - [uv](https://docs.astral.sh/uv/) (install: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Git
 - (Optional) CUDA-compatible GPU for training/inference
@@ -45,12 +45,22 @@ lid/
 │   ├── model.py           # Model loading, layer-wise inference
 │   ├── train.py           # Fine-tuning pipeline (LoRA, quantization)
 │   ├── infer.py           # Batched layer-wise inference
-│   └── visualize.py       # Plotting and analysis
+│   ├── visualize.py       # Plotting and analysis
+│   └── bench/             # Benchmarking framework
+│       ├── configs.py     # Experiment grid / run config dataclasses
+│       ├── runner.py      # Benchmark orchestration
+│       ├── strategy.py    # Strategy base class
+│       ├── metrics.py     # Timing and accuracy metrics
+│       ├── local_logger.py # Local filesystem results logger
+│       └── wandb_logger.py # Weights & Biases integration
 ├── tests/                 # Test suite (mirrors src/)
 ├── configs/               # YAML experiment configs
 ├── docs/                  # Research drafts and documentation
-│   └── draft.md           # Living research document
+│   └── project_proposal.md # Research proposal and objectives
 ├── notebooks/             # Exploration notebooks (outputs stripped)
+│   ├── LID_Ngrams_Classifier.ipynb
+│   ├── LID_Unicode_Blocks_Classifier.ipynb
+│   └── LID_Embedding_Classifier.ipynb
 ├── experiments/           # Experiment logs and results
 ├── .github/workflows/     # CI/CD
 ├── pyproject.toml         # Project metadata and dependencies (uv)
@@ -141,29 +151,164 @@ epochs: 3
 
 ### Results
 
-Save experiment outputs in `experiments/` using the pattern:
+Each `lid-bench` run automatically creates a structured output directory via `LocalResultsLogger`:
 
 ```
 experiments/
-  YYYY-MM-DD_experiment-name/
-    config.yaml
-    results.pkl
-    layer_accuracy.csv
-    plots/
+  all_results.csv                       # Cumulative results across all runs
+  step3-vectorized/
+    20260416_093000/
+      benchmark_results.csv             # Per-run detailed results
+      config.yaml                       # Frozen config snapshot
+      platform.json                     # GPU, PyTorch, CUDA version info
+      REPORT.md                         # Human-readable summary
+    latest -> 20260416_093000/          # Symlink to most recent run
 ```
+
+- Never edit `all_results.csv` by hand — it is append-only and managed by the logger.
+- Use the `latest` symlink for quick access to the most recent run of a given step.
 
 ### Notebooks
 
 - Notebooks are for **exploration only**, never for production logic.
-- Always strip outputs before committing (handled by `nbstripout` pre-commit hook).
+- Outputs are stripped before commit by the `nbstripout` pre-commit hook.
 - If a notebook produces a useful function, refactor it into `src/lid/`.
+- Name notebooks descriptively: `LID_{Method}_{Purpose}.ipynb` (e.g., `LID_Ngrams_Classifier.ipynb`).
+
+## Research Experiment Conventions
+
+### Reproducibility
+
+- **Always set random seeds.** The project default seed is `1024`.
+- **Record platform info.** GPU model, PyTorch version, and CUDA version are captured automatically by `LocalResultsLogger` into `platform.json`.
+- **Pin all dependencies** via `uv.lock` — never edit it manually; use `uv add` / `uv remove`.
+- **Store experiment configs** as YAML files in `configs/`. Configs are frozen into each run directory so results are always traceable.
+
+### W&B Logging
+
+- All benchmark runs log to the W&B project `lid-bench` by default.
+- Pass `--no-wandb` when you want quick local-only iteration without network overhead.
+- **Never commit W&B API keys or `.env` files.** Use environment variables or a gitignored `.env` file.
+
+### Notebook Workflow
+
+- Notebooks live in `notebooks/` and are for rapid prototyping and visualization.
+- The `nbstripout` pre-commit hook ensures cell outputs are never committed to git.
+- When a notebook function proves useful, extract it into `src/lid/` with proper tests.
+- Follow the naming convention `LID_{Method}_{Purpose}.ipynb`.
 
 ## Code Style
 
+**Tooling overview:**
+
 - **Formatter**: Ruff (line length 100)
-- **Linter**: Ruff (pycodestyle, pyflakes, isort, bugbear, simplify, naming)
-- **Type checker**: mypy (best effort; `ignore_missing_imports = true` for ML libs)
+- **Linter**: Ruff (pycodestyle, pyflakes, isort, pep8-naming, pyupgrade, bugbear, simplify, type-checking, ruff-specific)
+- **Type checker**: mypy (Python 3.12, `warn_return_any = true`, `ignore_missing_imports = true` for ML libs)
 - **Imports**: sorted by ruff-isort, `lid` as first-party
+
+### PEP 8 Naming Conventions
+
+Enforced automatically by ruff's `N` (pep8-naming) rules:
+
+| Element | Convention | Example |
+|---|---|---|
+| Functions, methods, variables | `snake_case` | `compute_lid_score` |
+| Classes | `PascalCase` | `LocalResultsLogger` |
+| Module-level constants | `UPPER_SNAKE_CASE` | `DEFAULT_SEED = 1024` |
+| Modules and packages | `snake_case` | `local_logger.py` |
+| Private / internal | Leading underscore | `_parse_row` |
+
+Never use `l`, `O`, or `I` as single-character variable names (ambiguous in many fonts).
+
+### Type Hints
+
+Type annotations are **required for all new code**. mypy runs in CI via `make typecheck`.
+
+- Use Python 3.12 native generics: `list[int]`, `dict[str, float]`, `tuple[int, ...]` — not `List`, `Dict`, `Tuple` from `typing`.
+- Use union syntax: `X | None` — not `Optional[X]`.
+- Use `from __future__ import annotations` at the top of every module for forward-reference support and consistent behaviour.
+- All function signatures must annotate **both** parameters and return type.
+- Use the `TYPE_CHECKING` guard for import-only types to avoid circular imports and runtime overhead:
+
+```python
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from lid.bench.configs import RunConfig
+
+
+def process(config: RunConfig, data: list[dict[str, float]]) -> float:
+    """Process benchmark data and return aggregate score."""
+    ...
+```
+
+### Docstrings
+
+Use **Google-style** docstrings for all public modules, classes, and functions.
+
+**One-liner** (simple helpers):
+
+```python
+def seed_everything(seed: int = 1024) -> None:
+    """Set random seeds for reproducibility across all frameworks."""
+```
+
+**Multi-line** (complex functions):
+
+```python
+def run_benchmark(
+    config_path: Path,
+    strategies: list[str],
+    *,
+    repeats: int = 3,
+) -> dict[str, float]:
+    """Execute a benchmark grid from a YAML config file.
+
+    Args:
+        config_path: Path to the YAML experiment configuration.
+        strategies: List of strategy names to evaluate.
+        repeats: Number of repetitions per configuration.
+
+    Returns:
+        Mapping of strategy name to mean latency in seconds.
+
+    Raises:
+        FileNotFoundError: If config_path does not exist.
+        ValueError: If an unknown strategy name is provided.
+    """
+```
+
+### Import Order
+
+Enforced by ruff's `I` (isort) rules. Imports are grouped in this order:
+
+1. **Standard library** (`os`, `sys`, `pathlib`, …)
+2. **Third-party** (`torch`, `wandb`, `pandas`, …)
+3. **First-party** (`lid`, `lid.bench`, …)
+
+Additional rules:
+
+- Prefer **absolute imports**: `from lid.bench.configs import RunConfig`.
+- Place type-only imports inside a `TYPE_CHECKING` block (enforced by ruff `TCH` rules).
+- One blank line between each import group.
+
+### Code Layout
+
+- **Max line length**: 100 characters (configured in ruff; `E501` is ignored so long lines won't block CI, but aim for 100).
+- **Indentation**: 4 spaces (no tabs).
+- **Blank lines**: 2 blank lines before and after top-level function/class definitions; 1 blank line between methods inside a class.
+- **Trailing commas**: Always use trailing commas on multi-line collections, function signatures, and argument lists — this produces cleaner diffs.
+- **String quotes**: Double quotes preferred (ruff-format default).
+
+## Security
+
+- **Never commit API keys, tokens, or credentials** to the repository.
+- Store secrets in a `.env` file (gitignored) or use environment variables.
+- The `detect-private-key` pre-commit hook will catch accidental private key commits.
+- Always review `git diff --cached` before every commit to confirm no sensitive data is staged.
+- If you accidentally commit a secret, rotate it immediately and notify the team.
 
 ## Adding a New Model
 

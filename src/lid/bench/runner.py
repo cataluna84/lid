@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import gc
+import os
 import time
-from pathlib import Path
 
 import torch
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 import lid.bench.strategies  # noqa: F401  -- register all strategies
 from lid.bench.configs import ExperimentGrid, RunConfig
+from lid.bench.local_logger import LocalResultsLogger
 from lid.bench.metrics import MetricsCollector
 from lid.bench.strategy import StrategyRegistry, build_token_index
 from lid.bench.wandb_logger import WandbBenchLogger
@@ -75,6 +77,10 @@ def _run_single(
                     ),
                 },
             )
+
+        del probs
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     collector.end_inference()
 
@@ -140,9 +146,15 @@ def _run_single(
 class BenchmarkRunner:
     """Grid expansion, sequential execution, and results management."""
 
-    def __init__(self, grid: ExperimentGrid, wandb_enabled: bool = True):
+    def __init__(
+        self,
+        grid: ExperimentGrid,
+        wandb_enabled: bool = True,
+        config_path: str = "",
+    ):
         self.grid = grid
         self.wandb_enabled = wandb_enabled
+        self.config_path = config_path
 
     def run(self) -> list[dict]:
         configs = self.grid.expand()
@@ -162,10 +174,20 @@ class BenchmarkRunner:
             enabled=self.wandb_enabled,
         )
 
+        local_logger = LocalResultsLogger(
+            grid_name=self.grid.name,
+            base_dir="experiments",
+        )
+        local_logger.setup()
+
         results: list[dict] = []
         for i, config in enumerate(configs):
             print(f"\n[{i + 1}/{len(configs)}] {config.run_name}")
             logger.init_run(config)
+
+            if logger.run_url:
+                local_logger.record_wandb_url(config.run_name, logger.run_url)
+                local_logger.set_wandb_project_url(logger.project_url)
 
             try:
                 result = _run_single(config, df, logger)
@@ -173,21 +195,14 @@ class BenchmarkRunner:
             except Exception as e:
                 print(f"  FAILED: {e}")
                 results.append({"strategy": config.strategy, "error": str(e)})
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                gc.collect()
             finally:
                 logger.finish()
 
-        # Save CSV
-        output_dir = Path("experiments")
-        output_dir.mkdir(exist_ok=True)
-        csv_path = output_dir / "benchmark_results.csv"
-
-        if results:
-            keys = list(results[0].keys())
-            with open(csv_path, "w", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=keys)
-                writer.writeheader()
-                writer.writerows(results)
-            print(f"\nResults saved to {csv_path}")
+        # Save local results and generate report
+        local_logger.finalize(results, self.grid, self.config_path)
 
         # Print summary
         print("\n" + "=" * 80)
@@ -215,7 +230,7 @@ def main():
     args = parser.parse_args()
 
     grid = ExperimentGrid.from_yaml(args.config)
-    runner = BenchmarkRunner(grid, wandb_enabled=not args.no_wandb)
+    runner = BenchmarkRunner(grid, wandb_enabled=not args.no_wandb, config_path=args.config)
     runner.run()
 
 

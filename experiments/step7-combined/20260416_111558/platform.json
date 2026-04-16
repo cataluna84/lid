@@ -1,0 +1,15 @@
+{
+  "timestamp": "20260416_111558",
+  "datetime": "2026-04-16 11:46:13",
+  "python_version": "3.12.13",
+  "os": "Linux 6.8.0-1046-nvidia",
+  "machine": "x86_64",
+  "command": "/home/ubuntu/Workspace/lid/.venv/bin/lid-bench configs/step7_combined.yaml",
+  "pytorch_version": "2.11.0+cu128",
+  "cuda_available": true,
+  "gpu_name": "NVIDIA H100 80GB HBM3",
+  "gpu_memory_gb": 79.2,
+  "cuda_version": "12.8",
+  "bitsandbytes_version": "0.49.2",
+  "flash_attn_version": "2.8.3"
+}

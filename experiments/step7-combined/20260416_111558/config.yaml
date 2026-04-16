@@ -1,0 +1,23 @@
+meta:
+  name: "step7-combined"
+  wandb_project: "lid-bench"
+  dataset: "1024m/LID"
+  dataset_file: "Data_Hackathon/LID-500.parquet"
+  n_samples: 3350
+  warmup_batches: 2
+  repeat: 3
+  seed: 1024
+  profile: false
+
+grid:
+  strategy: [combined_flash_compiled, combined_flash_int8]
+  dtype: [fp16, bf16]
+  batch_size: [16, 32]
+  max_length: [256, 512]
+
+exclude:
+  - {strategy: combined_flash_int8, dtype: bf16}
+
+fixed:
+  model: "CohereLabs/tiny-aya-global"
+  temperature: 0.2

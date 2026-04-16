@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import warnings
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+warnings.filterwarnings("ignore", message="MatMul8bitLt.*cast from torch.bfloat16")
 
 from lid.bench.strategies.vectorized import VectorizedStrategy
 from lid.bench.strategy import StrategyRegistry

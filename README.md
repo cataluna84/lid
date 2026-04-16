@@ -54,7 +54,12 @@ transformer layers.
 
 Extracting all 37 hidden states significantly increases memory because
 PyTorch must retain every intermediate activation. The table below
-estimates peak VRAM for the batch sizes used in our benchmark grid:
+estimates peak VRAM for the batch sizes used in our benchmark grid.
+
+> **Note:** These are theoretical estimates. Actual measured peak VRAM
+> on H100 80 GB was **70-76 GB** for quantized strategies (INT8/INT4)
+> with `output_hidden_states=True` across all 37 layers, due to
+> activation caching overhead.
 
 | Precision | Batch Size 16, seq 512 | Batch Size 32, seq 512 | Batch Size 64, seq 512 |
 |-----------|------------------------|------------------------|------------------------|
@@ -68,21 +73,22 @@ estimates peak VRAM for the batch sizes used in our benchmark grid:
 |-----|------|--------------------|---------------|----------------|
 | **RTX 4090** | 24 GB | Partial (bs <= 32 fp16) | ~$0.44/hr | Dev/debug only |
 | **A100 40 GB** | 40 GB | Yes (all but bs64 fp16) | ~$1.19/hr | Good enough |
-| **A100 80 GB** | 80 GB | Yes (full grid) | ~$1.39/hr | **Best value** |
-| **H100 80 GB** | 80 GB | Yes + faster compile | ~$2.39/hr | Overkill for 3.3B |
+| **A100 80 GB** | 80 GB | Yes (full grid) | ~$1.39/hr | **Budget pick** |
+| **H100 80 GB** | 80 GB | Yes + faster compile | ~$2.39/hr | **What we use** |
 | **L40S 48 GB** | 48 GB | Yes (most configs) | ~$0.86/hr | Budget option |
 
-**Our recommendation: A100 80 GB.** The 3.35B model with all hidden
-states at fp16, batch size 64, sequence length 512 peaks at ~28 GB.
-An A100 80 GB handles this with room to spare and costs roughly half
-of an H100. The H100 is unnecessary for a 3.3B model -- its advantage
-is primarily in models above 13B parameters.
+**Our setup: H100 80 GB HBM3.** All experiments in this repository
+were run on an H100 80 GB. The faster HBM3 bandwidth and improved
+`torch.compile` performance make a noticeable difference for
+layer-wise extraction across all 37 hidden states. **A100 80 GB** is
+a good budget alternative -- it handles the full grid comfortably at
+roughly half the hourly cost.
 
-For a complete benchmark run (456 configs, ~3 hours on A100 80 GB):
+For a complete benchmark run (456 configs, ~2 hours on H100 80 GB):
 
 ```
-Estimated cost: 456 configs * ~25 sec/config = ~3.2 hours
-A100 80 GB @ $1.39/hr = ~$4.50 total
+Estimated cost: 456 configs * ~15 sec/config = ~1.9 hours
+H100 80 GB @ $2.39/hr = ~$4.55 total
 ```
 
 ---
@@ -110,8 +116,12 @@ cp .env.example .env
 #   WANDB_API_KEY=your_wandb_key_here   (optional)
 #   WANDB_PROJECT=lid-bench              (optional)
 
-# Install everything (Python 3.12, PyTorch 2.11 + CUDA 13.0, all deps)
+# Install everything (Python 3.12, PyTorch 2.11 + CUDA 12.8, all deps)
 make dev
+
+# (Optional) Install flash-attn for Flash Attention 2 support
+# Pre-built wheels are available for CUDA 12.8:
+uv pip install flash-attn --no-build-isolation
 
 # Verify
 make test
@@ -148,6 +158,7 @@ lid/
 │       │   └── combined.py         #       Flash+Compile, Flash+INT8
 │       ├── metrics.py              #     3-tier metrics collector
 │       ├── wandb_logger.py         #     W&B integration wrapper
+│       ├── local_logger.py         #     Local filesystem results logger
 │       └── runner.py               #     Grid expansion + execution engine
 ├── configs/                        # Experiment configurations
 │   ├── base.yaml                   #   Training defaults
@@ -156,9 +167,12 @@ lid/
 │   └── wandb_sweep.yaml            #   W&B Sweep alternative
 ├── notebooks/                      # Exploration notebooks
 │   ├── LID_Inference_Vibecoded.ipynb  # Layer-wise inference (original Colab)
-│   └── LID_Regex.ipynb               # Unicode block heuristic classifier
+│   ├── LID_Regex.ipynb               # Unicode block heuristic classifier
+│   ├── LID_Ngrams_Classifier.ipynb    # N-gram based LID classifier
+│   ├── LID_Unicode_Blocks_Classifier.ipynb  # Unicode block + regex classifier
+│   └── LID_Embedding_Classifier.ipynb # Embedding model (0.6B) classifier
 ├── docs/
-│   ├── draft.md                    # Research scope, questions, related work
+│   ├── project_proposal.md         # Project proposal, research scope, questions, related work
 │   └── optimization_spec.md        # Optimization strategy specification
 ├── experiments/                    # Output directory for results
 ├── tests/                          # Unit tests
@@ -176,6 +190,9 @@ lid/
 | `lid-infer` | `src/lid/infer.py` | Run layer-wise inference (original) |
 | `lid-visualize` | `src/lid/visualize.py` | Plot results from inference |
 | `lid-bench` | `src/lid/bench/runner.py` | Run optimization benchmark grid |
+| `lid-report` | `src/lid/report.py` | Generate comparison report from W&B |
+| `lid-recommend` | `src/lid/recommend.py` | Recommend best inference config from benchmarks |
+| `lid-upload` | `src/lid/upload.py` | Backfill local results to W&B |
 
 ---
 
@@ -206,8 +223,9 @@ lid-infer \
 #   experiments/baseline/layer_avg_probs.csv -- Per-layer probabilities
 ```
 
-**Expected runtime:** ~45-60 minutes on A100 (this is the unoptimized
-eager-mode triple-loop code).
+**Expected runtime:** ~4 min on H100 80 GB (eager baseline). On A100,
+expect ~45-60 minutes (this is the unoptimized eager-mode triple-loop
+code).
 
 **Expected results:** Layer accuracy rises from ~5% at layer 1 to ~31%
 at layer 37. This is the number we want to reproduce and then speed up.
@@ -256,16 +274,16 @@ fixed:
 # Run the quick test (should take ~5 minutes)
 lid-bench configs/bench_quick.yaml --no-wandb
 
-# Expected output:
+# Expected output (H100 80 GB):
 # ================================================================================
 # BENCHMARK SUMMARY
 # ================================================================================
 # strategy                  dtype  bs       sps   mem_mb    acc
 # ------------------------------------------------------------
-# eager                     fp16   16        7.1     4102  0.312
-# vectorized                fp16   16       64.1     4210  0.312
+# eager                     fp16   16       14.0     4102  0.312
+# vectorized                fp16   16       70.0     4210  0.312
 #                                          ^^^^
-#                              ~9x speedup, same accuracy
+#                              ~5x speedup, same accuracy
 ```
 
 #### Full benchmark: All strategies
@@ -320,11 +338,11 @@ lid-bench configs/bench_vectorized_only.yaml
 
 Run strategies incrementally so you can compare each improvement:
 
-| Step | Config | What it tests | Expected result |
-|------|--------|---------------|-----------------|
-| 1 | `strategy: [eager]` | Baseline timing | ~7 samples/sec |
-| 2 | `strategy: [vectorized]` | Remove Python loops | ~60-70 sps (~10x) |
-| 3 | `strategy: [compiled]` | Add torch.compile | ~90-100 sps (~1.5x on top) |
+| Step | Config | What it tests | Expected result (H100) |
+|------|--------|---------------|------------------------|
+| 1 | `strategy: [eager]` | Baseline timing | ~14 samples/sec |
+| 2 | `strategy: [vectorized]` | Remove Python loops | ~70-133 sps (~5-10x) |
+| 3 | `strategy: [compiled]` | Add torch.compile | ~105-186 sps (~1.5x on top) |
 | 4 | `strategy: [sdpa]` | Fused attention | ~80 sps + less memory |
 | 5 | `strategy: [flash_attn]` | Flash Attention 2 | ~85 sps + ~40% less memory |
 | 6 | `strategy: [quantized_int8]` | INT8 weights | Similar sps, ~50% less memory |
@@ -457,7 +475,60 @@ executes each config sequentially.
 
 ### Reading Results
 
-Results are written to `experiments/benchmark_results.csv`:
+Each experiment step writes results to a timestamped directory:
+
+```
+experiments/
+├── {step-name}/                    # e.g. "eager-fp16-bs16"
+│   ├── {timestamp}/                # e.g. "20260415_143022"
+│   │   ├── benchmark_results.csv   # Per-run metrics for this step
+│   │   ├── config.yaml             # Exact config used
+│   │   ├── platform.json           # GPU, driver, PyTorch versions
+│   │   └── REPORT.md               # Human-readable summary
+│   └── latest -> {timestamp}/      # Symlink to most recent run
+├── all_results.csv                 # Cumulative append-only CSV (all steps)
+└── ...
+```
+
+The cumulative `experiments/all_results.csv` is append-only -- every
+benchmark run appends its rows, so you always have a single file for
+cross-step analysis.
+
+The `latest` symlink in each step directory always points to the most
+recent run, making it easy to inspect results without remembering
+timestamps.
+
+#### Recommending the best config
+
+After running benchmarks, use `lid-recommend` to find the optimal
+inference hyperparameters without digging through CSVs:
+
+```bash
+# Best throughput (default)
+lid-recommend
+
+# Best throughput among configs with accuracy >= 3%
+lid-recommend --min-accuracy 0.03
+
+# Optimize for energy or memory instead
+lid-recommend --optimize energy --min-accuracy 0.03
+lid-recommend --optimize memory
+
+# Show top-5 configs
+lid-recommend --top 5
+
+# JSON output for scripting
+lid-recommend --json
+
+# Pull from W&B instead of local CSV
+lid-recommend --from-wandb
+```
+
+This reads `experiments/all_results.csv`, groups by config, averages
+across repeats, ranks by the chosen metric, and prints a ready-to-paste
+`lid-infer` command with the winning hyperparameters.
+
+#### CSV columns
 
 | Column | Description |
 |--------|-------------|
@@ -533,6 +604,9 @@ wandb agent your-entity/lid-bench/SWEEP_ID
 |----------|-------------|------------|
 | `LID_Inference_Vibecoded.ipynb` | Original layer-wise inference pipeline on tiny-aya-global. Processes 3,350 samples through all 37 layers, extracts per-layer class probabilities for 67 languages. | `results.pkl`, accuracy curves |
 | `LID_Regex.ipynb` | Unicode block-based heuristic classifier by Ram Mohan Rao Kadiyala. Extracts character block distributions for 1.2M texts, evaluates against CommonLID. | Block distribution analysis |
+| `LID_Ngrams_Classifier.ipynb` | N-gram (1-5) based language classifier. Trained on 500/1000/2500 samples per language. Limited scaling for low-resource languages. | N-gram model comparisons |
+| `LID_Unicode_Blocks_Classifier.ipynb` | Unicode block distribution + regex classifier. 20+ languages at 99%+ accuracy via regex alone for unique scripts. | Per-script accuracy breakdown |
+| `LID_Embedding_Classifier.ipynb` | Embedding model (0.6B) classifier achieving macro F1 0.97+ on unseen domains with 900 samples per language. | F1 scores, domain transfer |
 
 Both notebooks load HF tokens from `.env` via `python-dotenv` (no
 Colab `userdata` dependency).
@@ -563,14 +637,16 @@ grid:
 ### "flash-attn not installed" error
 
 Flash Attention 2 requires the `flash-attn` package which needs a
-CUDA-compatible build:
+CUDA-compatible build. Pre-built wheels are available for CUDA 12.8,
+so installation is usually quick:
 
 ```bash
 uv pip install flash-attn --no-build-isolation
 ```
 
-If it fails to build, use `sdpa` instead (built into PyTorch, no
-extra package needed):
+If no pre-built wheel is found for your platform, it will build from
+source (takes 10-30 minutes). If it fails to build, use `sdpa` instead
+(built into PyTorch, no extra package needed):
 
 ```yaml
 grid:

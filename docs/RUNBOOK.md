@@ -32,7 +32,7 @@ make test
 uv run python -c "import torch; print(torch.cuda.get_device_name(0), torch.cuda.get_device_properties(0).total_mem // 1024**3, 'GB')"
 ```
 
-**You should see:** `NVIDIA A100-SXM4-80GB 79 GB` (or your GPU name).
+**You should see:** `NVIDIA H100 80GB HBM3 79 GB` (or your GPU name).
 
 ---
 
@@ -67,7 +67,7 @@ through all 37 layers using the triple-nested Python loop
 Collects 3-tier metrics (wall-clock, GPU memory, power) and logs
 everything to W&B.
 
-**Expected time:** ~45-60 min on A100 80 GB.
+**Expected time:** ~4 min on H100 80 GB (~10 min on A100 80 GB).
 
 **Expected output files:**
 ```
@@ -424,7 +424,8 @@ EOF
 ```
 
 ```bash
-uv run lid-bench configs/step7_combined.yaml
+uv run lid-bench configs/step7_combined.yaml 2>&1 | tee -a experiments/step7_combined.log
+
 ```
 
 **Expected output:**
@@ -496,6 +497,39 @@ uv run lid-report --best-per-strategy --log-summary
 > uv run lid-upload experiments/step1_baseline/ --strategy baseline_infer --wandb-tags baseline
 > ```
 
+### Get recommended inference hyperparameters
+
+After benchmarking, use `lid-recommend` to find the best config and
+get a ready-to-paste `lid-infer` command:
+
+```bash
+# Best throughput (default)
+uv run lid-recommend
+
+# Best throughput among configs with accuracy >= 3%
+uv run lid-recommend --min-accuracy 0.03
+
+# Optimize for energy efficiency instead
+uv run lid-recommend --optimize energy --min-accuracy 0.03
+
+# Show top-5 configs ranked by throughput
+uv run lid-recommend --top 5
+
+# Optimize for lowest GPU memory usage
+uv run lid-recommend --optimize memory
+
+# Machine-readable JSON (for scripting / CI)
+uv run lid-recommend --json
+
+# Pull from W&B instead of local CSV
+uv run lid-recommend --from-wandb
+```
+
+The command reads `experiments/all_results.csv` (or W&B with
+`--from-wandb`), groups runs by config, averages across repeats, ranks
+by the chosen metric, and prints the winning config with exact
+`lid-infer` flags.
+
 ---
 
 ## Step 9 -- Full Grid with W&B (for the paper)
@@ -511,8 +545,9 @@ uv run wandb login
 uv run lid-bench configs/bench_grid.yaml
 ```
 
-This takes ~3 hours on A100 80 GB. Results go to:
-- `experiments/benchmark_results.csv` (local)
+This takes ~2 hours on H100 80 GB (~3 hours on A100 80 GB). Results go to:
+- `experiments/{step-name}/{timestamp}/` -- per-step results, config, platform info, auto-generated report
+- `experiments/all_results.csv` -- cumulative append-only CSV
 - W&B project `lid-bench`, group `lid-bench-v1` (cloud)
 
 ---
@@ -595,6 +630,9 @@ uv run lid-bench configs/step7_combined.yaml
 
 # Comparison report (pulls all runs from W&B)
 uv run lid-report --best-per-strategy
+
+# Recommend best inference config from benchmark results
+uv run lid-recommend --min-accuracy 0.03
 
 # Backfill local results to W&B
 uv run lid-upload experiments/step1_baseline/ --strategy baseline_infer --wandb-tags baseline

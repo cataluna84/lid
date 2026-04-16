@@ -140,6 +140,18 @@ class WandbBenchLogger:
         artifact.add_file(csv_path)
         self._run.log_artifact(artifact)
 
+    @property
+    def run_url(self) -> str:
+        if self._run is not None:
+            return self._run.url
+        return ""
+
+    @property
+    def project_url(self) -> str:
+        if self._run is not None:
+            return f"https://wandb.ai/{self._run.entity}/{self._run.project}"
+        return ""
+
     def finish(self) -> None:
         if not self._enabled or self._run is None:
             return

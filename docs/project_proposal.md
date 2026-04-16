@@ -1,6 +1,6 @@
-# Layer-Wise Dynamics of Multilingual Language Identification in Compact Foundation Models
+# Project Proposal: Layer-Wise Dynamics of Multilingual Language Identification in Compact Foundation Models
 
-> Research draft -- living document for collaborators
+> Living document for collaborators -- last updated 2026-04-16
 
 ## Abstract
 
@@ -113,9 +113,100 @@ This is a **publishable research direction** if framed as a systematic empirical
 
 ---
 
+## Experiments Conducted (March--April 2026)
+
+### Objective Beyond Scope
+
+The primary goal beyond the original scope document was to find **an approach that would work on unseen domains for LID** -- i.e., a classifier that generalizes beyond the training distribution to handle web text, social media, code-mixed content, and other non-standard inputs.
+
+### Approach 1: Unigram Classifier
+
+- **Method:** Character unigram frequency vectors as features for a classifier, trained on 500 / 1,000 / 2,500 samples per language.
+- **Notebook:** [`notebooks/LID_Ngrams_Classifier.ipynb`](../notebooks/LID_Ngrams_Classifier.ipynb)
+- **Result:** Does not scale for low-resource languages or out-of-domain texts. Feature space too sparse for closely related languages sharing the same script.
+
+### Approach 2: N-gram Classifier (n=2,3,...5)
+
+- **Method:** Character n-gram frequency vectors (bigrams through 5-grams) with the same sample sizes as Approach 1.
+- **Notebook:** Same as Approach 1.
+- **Result:** Similar results to unigrams -- marginal improvement from higher-order n-grams, but still insufficient for low-resource and out-of-domain generalization.
+
+### Approach 3: Unicode Block + Regex Classifier
+
+- **Method:** Classify characters/tokens via Unicode block membership using regex for unique and rare scripts (e.g., Devanagari, Thai, Georgian), then a statistical classifier for common scripts (e.g., Latin, Cyrillic).
+- **Notebook:** [`notebooks/LID_Unicode_Blocks_Classifier.ipynb`](../notebooks/LID_Unicode_Blocks_Classifier.ipynb)
+- **Result:** **20+ of the ~67 TinyAya languages could be classified at over 99% accuracy using regex alone** (languages with unique scripts). The remaining languages sharing common scripts (Latin, Cyrillic, Arabic) require a secondary classifier. This was also tested on the 4 benchmarks used in Approach 4.
+
+### Approach 4: Embedding Model Classifier (Best Result)
+
+- **Method:** Fine-tune a 0.6B embedding model with a classification head, trained on ~900 samples per language (~30 min on 1xH100).
+- **Notebook:** [`notebooks/LID_Embedding_Classifier.ipynb`](../notebooks/LID_Embedding_Classifier.ipynb)
+- **Result:** **Macro F1 of 0.97+ even on unseen domains**, including out-of-distribution web text and benchmark datasets. This raises the question: if a small embedding model achieves this performance with minimal training data, does pruning TinyAya by ~80% provide any advantage?
+- **Note on CommonLID F1:** The observed drop on CommonLID macro F1 is attributed to mislabelling in the benchmark (examples shared in Discord). Actual performance is estimated around 0.80 after accounting for label noise.
+
+### Implications for This Project
+
+The embedding model result (Approach 4) establishes a strong baseline: a 0.6B model achieving 0.97+ F1 on unseen domains with <1000 samples/language. The layer-wise analysis in this project investigates **why** and **where** in the transformer stack these language-discriminative signals form, which the embedding approach treats as a black box. The two lines of work are complementary:
+
+- **This project (layer-wise LID):** Mechanistic understanding of how language identification emerges across layers, with optimization benchmarking for deployment efficiency.
+- **Embedding classifier:** Practical high-accuracy system for production LID.
+
+---
+
+## Phase 3 and Beyond: Where Do Classifications Occur in Large Language Models?
+
+Phase 2 (current) focuses on optimizing the inference pipeline for layer-wise extraction on a single model and task. **Phase 3 generalizes the core question:** at which layers do LLMs form task-relevant classification signals, and is this consistent across models and tasks?
+
+### Core Research Question
+
+Using **normalized log-probabilities extracted from each layer** of an LLM, at what depth does classification performance plateau -- and can the remaining layers be pruned for efficiency?
+
+### Experimental Design
+
+1. **Multiple classification tasks** (not just LID):
+   - Language Identification (LID) -- current focus
+   - Natural Language Inference (NLI)
+   - Physical Intuition QA (PIQA)
+   - Social Interaction QA (SIQA)
+   - Fill-mask / cloze tasks
+   - Other generic classification benchmarks as available
+
+2. **Multiple LLMs of similar size** (1--4B parameter range):
+   - Extract per-layer normalized log-probs for every model
+   - Compare layer-wise accuracy curves across models on the same task
+   - Identify whether a common "plateau layer range" exists
+
+3. **Cross-model analysis:**
+   - If classification performance plateaus at layer N across multiple models, the layers beyond N are candidates for pruning
+   - Investigate whether this is a universal phenomenon (architecture-independent) or model-specific
+   - Compare decoder-only vs encoder-decoder architectures if feasible
+
+### Fine-Tuning Effects on Layer-Wise Dynamics
+
+A key sub-question: **how does task-specific fine-tuning reshape the layer-wise accuracy curve?**
+
+Three hypotheses to test:
+
+- **H1 -- Early shift:** Fine-tuning moves the plateau earlier, compressing the discriminative signal into shallower layers. This would imply fine-tuning makes the model more "efficient" at the task.
+- **H2 -- Late boost:** Fine-tuning primarily improves performance in the final layers while leaving early/mid layers largely unchanged. This would suggest the later layers are doing task-specific adaptation.
+- **H3 -- Uniform lift:** Fine-tuning improves accuracy across all layers roughly equally, indicating a distributed rather than localized effect.
+
+**Experimental approach:**
+- Extract layer-wise accuracy curves at multiple training checkpoints (every N steps)
+- Compare pre-trained vs fine-tuned vs partially fine-tuned (LoRA at different layer ranges)
+- Track whether the plateau layer shifts, the plateau height changes, or both
+
+### Implications
+
+- **Pruning guidance:** If layers beyond a plateau point contribute negligibly, they can be removed for 30--50% inference speedup with minimal accuracy loss.
+- **Architecture design:** Understanding where classification signals form could inform future model design (e.g., narrower late layers, early exits).
+- **Fine-tuning strategy:** If fine-tuning shifts signals earlier, targeted LoRA on early layers may be sufficient (cheaper, faster).
+- **Universality:** If the phenomenon is consistent across models and tasks, it reveals something fundamental about how transformer depth relates to classification complexity.
+
+---
+
 ## Collaboration Notes
 
 - **Discord thread discussions** are the primary async communication channel.
-- Initial approach workflow diagram: TBA.
-- Experiment tracking: W&B or local CSV logs stored in `experiments/`.
+- Experiment tracking: W&B project [`lid-bench`](https://wandb.ai/cataluna84/lid-bench) + local per-step reports in `experiments/`.
 - All notebooks go in `notebooks/` and are stripped of outputs before commit (via `nbstripout`).
