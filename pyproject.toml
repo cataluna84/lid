@@ -62,6 +62,8 @@ lid-train = "lid.train:main"
 lid-infer = "lid.infer:main"
 lid-visualize = "lid.visualize:main"
 lid-bench = "lid.bench.runner:main"
+lid-upload = "lid.upload:main"
+lid-report = "lid.report:main"
 
 [dependency-groups]
 dev = [

@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import torch
+from dotenv import load_dotenv
 from tqdm import tqdm
 
 import lid.bench.strategies  # noqa: F401  -- register all strategies
@@ -49,8 +50,14 @@ def _run_single(
 
         batch_start = time.perf_counter()
         probs = strategy.extract_layer_probs(
-            model, tokenizer, batch_prompts, VALID_OPTIONS,
-            token_ids, token_mask, config.temperature, config.max_length,
+            model,
+            tokenizer,
+            batch_prompts,
+            VALID_OPTIONS,
+            token_ids,
+            token_mask,
+            config.temperature,
+            config.max_length,
         )
         batch_elapsed = time.perf_counter() - batch_start
 
@@ -58,22 +65,22 @@ def _run_single(
             all_probs.append(probs.cpu())
 
         if batch_idx >= config.warmup_batches:
-            logger.log_batch(batch_idx, {
-                "latency_ms": batch_elapsed * 1000,
-                "throughput_sps": len(batch_prompts) / max(batch_elapsed, 1e-9),
-                "gpu_mem_mb": (
-                    torch.cuda.max_memory_allocated() / 1e6
-                    if torch.cuda.is_available() else 0
-                ),
-            })
+            logger.log_batch(
+                batch_idx,
+                {
+                    "latency_ms": batch_elapsed * 1000,
+                    "throughput_sps": len(batch_prompts) / max(batch_elapsed, 1e-9),
+                    "gpu_mem_mb": (
+                        torch.cuda.max_memory_allocated() / 1e6 if torch.cuda.is_available() else 0
+                    ),
+                },
+            )
 
     collector.end_inference()
 
     # Post-processing
     collector.start_postprocessing()
-    stacked = (
-        torch.cat(all_probs, dim=1) if all_probs else torch.zeros(1, 1, len(VALID_OPTIONS))
-    )
+    stacked = torch.cat(all_probs, dim=1) if all_probs else torch.zeros(1, 1, len(VALID_OPTIONS))
 
     actual_isos = df["ISO-693-3"].tolist()[: config.n_samples]
     warmup_skip = config.warmup_batches * config.batch_size
@@ -201,6 +208,7 @@ class BenchmarkRunner:
 
 
 def main():
+    load_dotenv()
     parser = argparse.ArgumentParser(description="Run LID inference benchmark grid")
     parser.add_argument("config", help="Path to benchmark grid YAML")
     parser.add_argument("--no-wandb", action="store_true", help="Disable W&B logging")

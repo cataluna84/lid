@@ -2,6 +2,7 @@ import argparse
 import os
 
 import torch
+from dotenv import load_dotenv
 from torch.utils.data import Dataset, DataLoader
 from transformers import (
     AutoModelForCausalLM,
@@ -16,9 +17,7 @@ from lid.data import load_lid_dataset, build_training_sample
 
 class LIDDataset(Dataset):
     def __init__(self, texts, iso_codes, tokenizer, max_length=512):
-        self.samples = [
-            build_training_sample(t, c) for t, c in zip(texts, iso_codes)
-        ]
+        self.samples = [build_training_sample(t, c) for t, c in zip(texts, iso_codes)]
         self.tokenizer = tokenizer
         self.max_length = max_length
 
@@ -67,6 +66,7 @@ def parse_args():
 
 
 def main():
+    load_dotenv()
     args = parse_args()
     torch.manual_seed(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -77,9 +77,7 @@ def main():
         tokenizer.pad_token = tokenizer.eos_token
 
     dtype = torch.float16 if device == "cuda" else torch.float32
-    model = AutoModelForCausalLM.from_pretrained(
-        args.model, torch_dtype=dtype
-    )
+    model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=dtype)
 
     if args.use_lora:
         from peft import LoraConfig, get_peft_model, TaskType
@@ -122,16 +120,12 @@ def main():
         args.max_length,
     )
 
-    train_loader = DataLoader(
-        train_ds, batch_size=args.batch_size, shuffle=True, drop_last=True
-    )
+    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, drop_last=True)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
     total_steps = (len(train_loader) // args.grad_accum) * args.epochs
-    scheduler = get_linear_schedule_with_warmup(
-        optimizer, args.warmup_steps, total_steps
-    )
+    scheduler = get_linear_schedule_with_warmup(optimizer, args.warmup_steps, total_steps)
 
     scaler = torch.amp.GradScaler("cuda", enabled=(device == "cuda"))
 
@@ -174,11 +168,7 @@ def main():
                 val_loss += outputs.loss.item()
         avg_val_loss = val_loss / len(val_loader)
 
-        print(
-            f"Epoch {epoch + 1}: "
-            f"train_loss={avg_train_loss:.4f}, "
-            f"val_loss={avg_val_loss:.4f}"
-        )
+        print(f"Epoch {epoch + 1}: train_loss={avg_train_loss:.4f}, val_loss={avg_val_loss:.4f}")
 
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss

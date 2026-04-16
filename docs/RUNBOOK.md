@@ -3,6 +3,12 @@
 > Every command below is meant to be run from the repository root (`lid/`).
 > Run them **in order**. Each step prints a results table; record the
 > numbers before moving to the next step.
+>
+> **W&B Central Hub:** All steps log to a single W&B project (`lid-bench`)
+> so that every run -- including the baseline -- can be compared in one
+> dashboard.  Set the Step 1 baseline run as "baseline" in W&B to see
+> automatic metric deltas on every subsequent run.  Add `--no-wandb` to
+> any command to skip W&B logging for quick local-only iteration.
 
 ---
 
@@ -16,7 +22,7 @@ git clone git@github.com:cataluna84/lid.git && cd lid
 cp .env.example .env
 # Open .env and fill in:
 #   HF_TOKEN=hf_...
-#   WANDB_API_KEY=...       (optional, skip if using --no-wandb)
+#   WANDB_API_KEY=...       (required for W&B central hub; optional if using --no-wandb)
 
 # 0c. Install all dependencies (Python 3.12, PyTorch 2.11, CUDA 13.0)
 make dev
@@ -35,6 +41,11 @@ uv run python -c "import torch; print(torch.cuda.get_device_name(0), torch.cuda.
 This runs the **original unoptimized notebook code** as a Python script.
 It is the number every optimization will be compared against.
 
+The run automatically logs to W&B project `lid-bench` with tag `baseline`.
+After it finishes, go to the W&B project page and **set this run as
+baseline** (right-click → "Set as baseline") so that all subsequent runs
+show metric deltas against it.
+
 ```bash
 uv run lid-infer \
   --model CohereLabs/tiny-aya-global \
@@ -46,9 +57,15 @@ uv run lid-infer \
   --seed 1024
 ```
 
+> **Tip:** Add `--no-wandb` to skip W&B logging for a quick local-only run.
+> To retroactively upload local results to W&B later, use:
+> `uv run lid-upload experiments/step1_baseline/ --strategy baseline_infer --wandb-tags baseline`
+
 **What it does:** Loads the model in fp16, processes 3,350 samples
 through all 37 layers using the triple-nested Python loop
 (`for batch -> for layer -> for class`), saves per-layer accuracy.
+Collects 3-tier metrics (wall-clock, GPU memory, power) and logs
+everything to W&B.
 
 **Expected time:** ~45-60 min on A100 80 GB.
 
@@ -58,6 +75,7 @@ experiments/step1_baseline/
   results.pkl           # Full DataFrame with DATA, MAX, PROB columns
   layer_accuracy.csv    # Per-layer accuracy (37 rows)
   layer_avg_probs.csv   # Per-layer average correct-class probability
+  benchmark_row.csv     # Single CSV row compatible with lid-bench output
 ```
 
 **Record this number:** Look at the last row of `layer_accuracy.csv` --
@@ -76,7 +94,7 @@ Run the exact same logic through the bench framework so the timing
 numbers are directly comparable with optimized strategies.
 
 ```bash
-uv run lid-bench configs/step2_eager.yaml --no-wandb
+uv run lid-bench configs/step2_eager.yaml
 ```
 
 Create `configs/step2_eager.yaml` first:
@@ -109,7 +127,7 @@ EOF
 ```
 
 ```bash
-uv run lid-bench configs/step2_eager.yaml --no-wandb
+uv run lid-bench configs/step2_eager.yaml
 ```
 
 **Expected output:**
@@ -161,7 +179,7 @@ EOF
 ```
 
 ```bash
-uv run lid-bench configs/step3_vectorized.yaml --no-wandb
+uv run lid-bench configs/step3_vectorized.yaml
 ```
 
 **Expected output:**
@@ -223,7 +241,7 @@ EOF
 ```
 
 ```bash
-uv run lid-bench configs/step4_compiled.yaml --no-wandb
+uv run lid-bench configs/step4_compiled.yaml
 ```
 
 **Expected output:**
@@ -284,7 +302,7 @@ EOF
 ```
 
 ```bash
-uv run lid-bench configs/step5_attention.yaml --no-wandb
+uv run lid-bench configs/step5_attention.yaml
 ```
 
 **Expected output:**
@@ -343,7 +361,7 @@ EOF
 ```
 
 ```bash
-uv run lid-bench configs/step6_quantized.yaml --no-wandb
+uv run lid-bench configs/step6_quantized.yaml
 ```
 
 **Expected output:**
@@ -406,7 +424,7 @@ EOF
 ```
 
 ```bash
-uv run lid-bench configs/step7_combined.yaml --no-wandb
+uv run lid-bench configs/step7_combined.yaml
 ```
 
 **Expected output:**
@@ -454,6 +472,29 @@ this (best config per strategy, bs=16, fp16, ml=512):
 - INT4 saves 75% VRAM but drops ~1% accuracy.
 - Best throughput: `combined_flash_compiled` at ~15x.
 - Best memory: `combined_flash_int8` at 1.8 GB peak.
+
+### Generate the comparison report
+
+After running all steps, use `lid-report` to generate a unified
+comparison table from the W&B project.  This pulls every finished run,
+identifies the baseline, and computes speedup / memory deltas:
+
+```bash
+# Terminal comparison table (reads from W&B)
+uv run lid-report
+
+# Show only the best config per strategy
+uv run lid-report --best-per-strategy
+
+# Also log the comparison table back to W&B as a summary run
+uv run lid-report --best-per-strategy --log-summary
+```
+
+> **Backfill tip:** If you ran earlier steps with `--no-wandb`, you can
+> retroactively upload them:
+> ```bash
+> uv run lid-upload experiments/step1_baseline/ --strategy baseline_infer --wandb-tags baseline
+> ```
 
 ---
 
@@ -531,26 +572,32 @@ print(df.groupby('strategy')[['throughput_sps','gpu_mem_peak_mb','accuracy_last_
 make dev
 make test
 
-# Step 1: Original baseline inference
+# Step 1: Original baseline inference (logs to W&B automatically)
 uv run lid-infer --sample-frac 0.1 --batch-size 16 --output-dir experiments/step1_baseline
 
 # Step 2: Eager via bench framework
-uv run lid-bench configs/step2_eager.yaml --no-wandb
+uv run lid-bench configs/step2_eager.yaml
 
 # Step 3: Vectorized (main speedup)
-uv run lid-bench configs/step3_vectorized.yaml --no-wandb
+uv run lid-bench configs/step3_vectorized.yaml
 
 # Step 4: torch.compile
-uv run lid-bench configs/step4_compiled.yaml --no-wandb
+uv run lid-bench configs/step4_compiled.yaml
 
 # Step 5: Attention backends
-uv run lid-bench configs/step5_attention.yaml --no-wandb
+uv run lid-bench configs/step5_attention.yaml
 
 # Step 6: Quantization
-uv run lid-bench configs/step6_quantized.yaml --no-wandb
+uv run lid-bench configs/step6_quantized.yaml
 
 # Step 7: Combined strategies
-uv run lid-bench configs/step7_combined.yaml --no-wandb
+uv run lid-bench configs/step7_combined.yaml
+
+# Comparison report (pulls all runs from W&B)
+uv run lid-report --best-per-strategy
+
+# Backfill local results to W&B
+uv run lid-upload experiments/step1_baseline/ --strategy baseline_infer --wandb-tags baseline
 
 # Step 9: Full grid with W&B
 uv run lid-bench configs/bench_grid.yaml
