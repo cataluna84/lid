@@ -37,3 +37,10 @@ lang_plots/
 .DS_Store
 
 experiments/results/
+
+unsloth_compiled_cache
+baseline_lora_v2
+
+# Factory Droid memory system files (.factory/memories.md,
+# .factory/skills/...) are INTENTIONALLY tracked. Do not gitignore
+# the .factory/ directory.
