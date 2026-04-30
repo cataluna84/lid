@@ -27,7 +27,12 @@
 >    2024--2026).
 >
 > **Source:** *Layer-Wise Dynamics of Multilingual Language
-> Identification in Compact Foundation Models* (internal Google Doc).
+> Identification in Compact Foundation Models* — Google Doc:
+> <https://docs.google.com/document/d/1gUKP0q4uVP6FUFrRZKl6P3sWwji3APJami6o9Pex0y8/edit>.
+> The Markdown body below is a faithful mirror; if the Google Doc and
+> this file disagree, this file is treated as the canonical version
+> (the Google Doc may be edited or revoked, but this file is locked
+> to the public-release commit).
 >
 > **Public release date:** 2026-04-30. The original proposal mentioned
 > "ARR submission (May 2026 cycle)" as one of several venue options;

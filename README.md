@@ -43,8 +43,9 @@ a single short proposal. There are **three** documents in the
    the **canonical source** proposal. Twelve research questions, the
    "why this matters" framing, the initial reading list, the
    first-cut model and dataset shortlists. Treat it as the genesis
-   document; it is faithful to the original Google Doc that started
-   the project.
+   document; it is a faithful Markdown mirror of the original
+   Google Doc that started the project:
+   <https://docs.google.com/document/d/1gUKP0q4uVP6FUFrRZKl6P3sWwji3APJami6o9Pex0y8/edit>.
 2. **[`docs/project_proposal.md`](docs/project_proposal.md)** -- an
    **extension** of the source proposal. Same questions, restructured
    into a publishability assessment, an experimental-design table,
