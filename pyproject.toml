@@ -134,6 +134,12 @@ packages = ["src/lid"]
 target-version = "py312"
 line-length = 100
 src = ["src", "tests"]
+# Notebooks under notebooks/ are exploratory and not on the lint-clean
+# path. Their conventions (cell-output magics, ad-hoc names, in-cell
+# imports) are intentionally permissive; nbstripout still strips outputs
+# at commit time. ruff 0.5+ began linting .ipynb by default, so we opt
+# out here so both `make lint` and `pre-commit run -a` stay green.
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = [
