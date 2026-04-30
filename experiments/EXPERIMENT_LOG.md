@@ -5,6 +5,16 @@
 > **W&B project:** [`lid-bench`](https://wandb.ai/cataluna84/lid-bench)
 > **Model:** `CohereLabs/tiny-aya-global` (fp16, ~1B params)
 > **Dataset:** `1024m/LID` → `LID-500.parquet`, 10% stratified sample = 3,350 samples
+>
+> **Status (2026-04-30):** the repository is **public** under
+> Apache-2.0; this log is preserved verbatim as the recorded
+> reference run. The W&B URLs below are read-only; reproducers
+> should set `WANDB_ENTITY=<your-entity>` in `.env` so their own
+> runs land in their own namespace. See
+> [`docs/RUNBOOK.md`](../docs/RUNBOOK.md) for the step-by-step
+> recipe and [`README.md`](../README.md#reproducibility-caveats)
+> for the reproducibility caveats (hardware sensitivity, gated
+> dataset access, etc.).
 
 ---
 

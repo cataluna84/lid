@@ -3,21 +3,21 @@ import os
 
 import torch
 from dotenv import load_dotenv
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
+from tqdm import tqdm
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     get_linear_schedule_with_warmup,
 )
-from tqdm import tqdm
 
-from lid.constants import DEFAULT_MODEL, DEFAULT_DATASET, DEFAULT_DATASET_FILE
-from lid.data import load_lid_dataset, build_training_sample
+from lid.constants import DEFAULT_DATASET, DEFAULT_DATASET_FILE, DEFAULT_MODEL
+from lid.data import build_training_sample, load_lid_dataset
 
 
 class LIDDataset(Dataset):
     def __init__(self, texts, iso_codes, tokenizer, max_length=512):
-        self.samples = [build_training_sample(t, c) for t, c in zip(texts, iso_codes)]
+        self.samples = [build_training_sample(t, c) for t, c in zip(texts, iso_codes, strict=False)]
         self.tokenizer = tokenizer
         self.max_length = max_length
 
@@ -80,7 +80,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=dtype)
 
     if args.use_lora:
-        from peft import LoraConfig, get_peft_model, TaskType
+        from peft import LoraConfig, TaskType, get_peft_model
 
         lora_cfg = LoraConfig(
             task_type=TaskType.CAUSAL_LM,

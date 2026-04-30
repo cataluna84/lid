@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, ClassVar
 import torch
 
 if TYPE_CHECKING:
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from transformers import PreTrainedModel
+    from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 
 class InferenceStrategy(ABC):
@@ -20,14 +21,14 @@ class InferenceStrategy(ABC):
         model_name: str,
         dtype: str,
         device: str = "cuda",
-    ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
         """Load model and tokenizer with strategy-specific configuration."""
 
     @abstractmethod
     def extract_layer_probs(
         self,
-        model: AutoModelForCausalLM,
-        tokenizer: AutoTokenizer,
+        model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizerBase,
         prompts: list[str],
         valid_options: list[str],
         token_ids: torch.Tensor,
@@ -72,7 +73,7 @@ class StrategyRegistry:
 
 
 def build_token_index(
-    tokenizer: AutoTokenizer,
+    tokenizer: PreTrainedTokenizerBase,
     valid_options: list[str],
     device: str = "cuda",
 ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -82,9 +83,7 @@ def build_token_index(
         token_ids: ``[n_classes, max_tok_len]`` padded token IDs.
         token_mask: ``[n_classes, max_tok_len]`` float mask (1.0 for valid).
     """
-    all_tids = [
-        tokenizer.encode(opt, add_special_tokens=False) for opt in valid_options
-    ]
+    all_tids = [tokenizer.encode(opt, add_special_tokens=False) for opt in valid_options]
     max_tok_len = max(len(t) for t in all_tids)
     n_classes = len(valid_options)
 

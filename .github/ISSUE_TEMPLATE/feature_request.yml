@@ -1,0 +1,69 @@
+name: Feature request
+description: Suggest a new strategy, model, dataset, metric, or quality-of-life improvement.
+title: "[feat] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Heads-up: this repository is in transition into a successor
+        umbrella project (link TBA). Small features and quality-of-life
+        fixes are welcome here; large architectural changes are usually
+        a better fit for the successor. We will close-and-redirect
+        rather than reject.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the use case, not the solution. The "why" before the "what".
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: |
+        What would the user-visible change look like? CLI flags, YAML
+        config keys, new strategy name, new notebook, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you considered and why you ruled them out.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      multiple: true
+      options:
+        - New optimization strategy
+        - New model
+        - New dataset
+        - New metric
+        - Notebook
+        - CLI / DX
+        - Documentation
+        - CI / tooling
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: extras
+    attributes:
+      label: References / related work (optional)
+      description: Papers, repos, prior PRs, W&B runs.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct.
+          required: true

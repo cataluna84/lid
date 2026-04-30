@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+if TYPE_CHECKING:
+    from transformers import PreTrainedModel
+    from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from lid.bench.strategy import InferenceStrategy, StrategyRegistry
 
@@ -15,18 +21,16 @@ class VectorizedStrategy(InferenceStrategy):
         model_name: str,
         dtype: str,
         device: str = "cuda",
-    ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
         torch_dtype = torch.bfloat16 if dtype == "bf16" else torch.float16
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name, torch_dtype=torch_dtype
-        ).to(device)
+        model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch_dtype).to(device)
         return model, tokenizer
 
     def extract_layer_probs(
         self,
-        model: AutoModelForCausalLM,
-        tokenizer: AutoTokenizer,
+        model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizerBase,
         prompts: list[str],
         valid_options: list[str],
         token_ids: torch.Tensor,
@@ -52,9 +56,7 @@ class VectorizedStrategy(InferenceStrategy):
 
         hidden_states = base_outputs.hidden_states
         del base_outputs
-        last_hidden = torch.stack(
-            [h[batch_range, last_idx, :] for h in hidden_states]
-        )
+        last_hidden = torch.stack([h[batch_range, last_idx, :] for h in hidden_states])
         del hidden_states, inputs
 
         # Single batched lm_head: [n_layers, B, V]
@@ -70,9 +72,7 @@ class VectorizedStrategy(InferenceStrategy):
 
         # Gather log-probs for class token IDs: [n_layers, B, n_cls, max_toks]
         n_cls, max_toks = token_ids.shape
-        gathered = all_lp[:, :, token_ids.view(-1)].reshape(
-            n_layers, n_batch, n_cls, max_toks
-        )
+        gathered = all_lp[:, :, token_ids.view(-1)].reshape(n_layers, n_batch, n_cls, max_toks)
         del all_lp
         masked = gathered * token_mask.unsqueeze(0).unsqueeze(0)
         del gathered

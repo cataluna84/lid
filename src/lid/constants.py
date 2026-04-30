@@ -79,6 +79,4 @@ TASK_DESCRIPTION = (
     "and respond with the detected language's 3 letter code (ISO-693-3)"
 )
 
-LANG_CODES_BLOCK = "\n".join(
-    f"{k} : {v}" for k, v in sorted(LANG_TO_ISO.items())
-)
+LANG_CODES_BLOCK = "\n".join(f"{k} : {v}" for k, v in sorted(LANG_TO_ISO.items()))

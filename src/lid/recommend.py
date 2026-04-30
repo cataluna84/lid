@@ -95,19 +95,22 @@ def _load_from_csv(csv_path: Path) -> list[dict]:
         reader = csv.DictReader(f)
         for row in reader:
             try:
-                rows.append({
-                    "strategy": row["strategy"],
-                    "dtype": row["dtype"],
-                    "batch_size": int(row["batch_size"]),
-                    "max_length": int(row["max_length"]),
-                    "throughput_sps": float(row["throughput_sps"]),
-                    "latency_ms_per_sample": float(row.get("latency_ms_per_sample", 0)
-                                                   or row.get("latency_ms", 0)),
-                    "gpu_mem_peak_mb": float(row["gpu_mem_peak_mb"]),
-                    "energy_per_sample_mj": float(row["energy_per_sample_mj"]),
-                    "accuracy_last_layer": float(row["accuracy_last_layer"]),
-                    "wall_sec": float(row.get("wall_sec", 0) or row.get("total_wall_sec", 0)),
-                })
+                rows.append(
+                    {
+                        "strategy": row["strategy"],
+                        "dtype": row["dtype"],
+                        "batch_size": int(row["batch_size"]),
+                        "max_length": int(row["max_length"]),
+                        "throughput_sps": float(row["throughput_sps"]),
+                        "latency_ms_per_sample": float(
+                            row.get("latency_ms_per_sample", 0) or row.get("latency_ms", 0)
+                        ),
+                        "gpu_mem_peak_mb": float(row["gpu_mem_peak_mb"]),
+                        "energy_per_sample_mj": float(row["energy_per_sample_mj"]),
+                        "accuracy_last_layer": float(row["accuracy_last_layer"]),
+                        "wall_sec": float(row.get("wall_sec", 0) or row.get("total_wall_sec", 0)),
+                    }
+                )
             except (KeyError, ValueError):
                 continue
     return rows
@@ -127,18 +130,20 @@ def _load_from_wandb(project: str, entity: str | None) -> list[dict]:
         sps = s.get("throughput_sps", 0)
         if not sps:
             continue
-        rows.append({
-            "strategy": c.get("strategy", "unknown"),
-            "dtype": c.get("dtype", "fp16"),
-            "batch_size": int(c.get("batch_size", 0)),
-            "max_length": int(c.get("max_length", 0)),
-            "throughput_sps": float(sps),
-            "latency_ms_per_sample": float(s.get("latency_ms_per_sample", 0)),
-            "gpu_mem_peak_mb": float(s.get("gpu_mem_peak_mb", 0)),
-            "energy_per_sample_mj": float(s.get("energy_per_sample_mj", 0)),
-            "accuracy_last_layer": float(s.get("accuracy_last_layer", 0)),
-            "wall_sec": float(s.get("total_wall_sec", 0)),
-        })
+        rows.append(
+            {
+                "strategy": c.get("strategy", "unknown"),
+                "dtype": c.get("dtype", "fp16"),
+                "batch_size": int(c.get("batch_size", 0)),
+                "max_length": int(c.get("max_length", 0)),
+                "throughput_sps": float(sps),
+                "latency_ms_per_sample": float(s.get("latency_ms_per_sample", 0)),
+                "gpu_mem_peak_mb": float(s.get("gpu_mem_peak_mb", 0)),
+                "energy_per_sample_mj": float(s.get("energy_per_sample_mj", 0)),
+                "accuracy_last_layer": float(s.get("accuracy_last_layer", 0)),
+                "wall_sec": float(s.get("total_wall_sec", 0)),
+            }
+        )
     return rows
 
 
@@ -168,21 +173,23 @@ def _group_and_rank(
         mean_latency = statistics.mean(r["latency_ms_per_sample"] for r in runs)
         mean_wall = statistics.mean(r["wall_sec"] for r in runs)
 
-        ranked.append({
-            "strategy": strategy,
-            "dtype": dtype,
-            "batch_size": bs,
-            "max_length": ml,
-            "n_repeats": len(runs),
-            "throughput_sps": round(mean_sps, 1),
-            "latency_ms_per_sample": round(mean_latency, 2),
-            "gpu_mem_peak_mb": round(mean_mem, 0),
-            "energy_per_sample_mj": round(mean_energy, 0),
-            "accuracy_last_layer": round(mean_acc, 4),
-            "wall_sec": round(mean_wall, 1),
-            f"{metric_key}_std": round(std_metric, 2),
-            "_sort_key": mean_metric,
-        })
+        ranked.append(
+            {
+                "strategy": strategy,
+                "dtype": dtype,
+                "batch_size": bs,
+                "max_length": ml,
+                "n_repeats": len(runs),
+                "throughput_sps": round(mean_sps, 1),
+                "latency_ms_per_sample": round(mean_latency, 2),
+                "gpu_mem_peak_mb": round(mean_mem, 0),
+                "energy_per_sample_mj": round(mean_energy, 0),
+                "accuracy_last_layer": round(mean_acc, 4),
+                "wall_sec": round(mean_wall, 1),
+                f"{metric_key}_std": round(std_metric, 2),
+                "_sort_key": mean_metric,
+            }
+        )
 
     ranked.sort(key=lambda r: r["_sort_key"], reverse=higher_is_better)
     for r in ranked:
@@ -218,8 +225,10 @@ def _print_recommendation(ranked: list[dict], optimize: str, top: int) -> None:
             print("-" * 80)
 
         rank_label = f"#{i}" if top > 1 else "BEST"
-        print(f"\n  {rank_label}: {rec['strategy']}  /  {rec['dtype']}"
-              f"  /  bs={rec['batch_size']}  /  ml={rec['max_length']}")
+        print(
+            f"\n  {rank_label}: {rec['strategy']}  /  {rec['dtype']}"
+            f"  /  bs={rec['batch_size']}  /  ml={rec['max_length']}"
+        )
         print(f"       Throughput:  {rec['throughput_sps']:>8.1f} sps")
         print(f"       Latency:    {rec['latency_ms_per_sample']:>8.2f} ms/sample")
         print(f"       GPU Memory: {rec['gpu_mem_peak_mb']:>8,.0f} MB")

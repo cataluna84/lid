@@ -11,14 +11,16 @@ from tqdm import tqdm
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
-import lid.bench.strategies  # noqa: F401  -- register all strategies
-from lid.bench.configs import ExperimentGrid, RunConfig
-from lid.bench.local_logger import LocalResultsLogger
-from lid.bench.metrics import MetricsCollector
-from lid.bench.strategy import StrategyRegistry, build_token_index
-from lid.bench.wandb_logger import WandbBenchLogger
-from lid.constants import VALID_OPTIONS
-from lid.data import load_lid_dataset
+# The os.environ setdefault above must run before any of these imports trigger
+# torch initialization, hence the noqa: E402 across the block below.
+import lid.bench.strategies  # noqa: E402, F401  -- register all strategies
+from lid.bench.configs import ExperimentGrid, RunConfig  # noqa: E402
+from lid.bench.local_logger import LocalResultsLogger  # noqa: E402
+from lid.bench.metrics import MetricsCollector  # noqa: E402
+from lid.bench.strategy import StrategyRegistry, build_token_index  # noqa: E402
+from lid.bench.wandb_logger import WandbBenchLogger  # noqa: E402
+from lid.constants import VALID_OPTIONS  # noqa: E402
+from lid.data import load_lid_dataset  # noqa: E402
 
 
 def _run_single(
@@ -103,7 +105,7 @@ def _run_single(
         correct = 0
         prob_sum = 0.0
         for s in range(n_valid):
-            pred_idx = stacked[layer_idx, s].argmax().item()
+            pred_idx = int(stacked[layer_idx, s].argmax().item())
             pred_iso = VALID_OPTIONS[pred_idx]
             actual = actual_isos[s]
             if pred_iso == actual:

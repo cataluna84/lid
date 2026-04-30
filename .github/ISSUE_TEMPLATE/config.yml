@@ -1,0 +1,20 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or research-direction discussion
+    url: https://github.com/cataluna84/lid/discussions
+    about: >
+      Use Discussions for open-ended questions, research ideas, and
+      "is this the right approach?" conversations. Issues are reserved
+      for actionable bug reports, concrete feature requests, and
+      experiment-reproducibility questions.
+  - name: Successor umbrella project (active long-term work)
+    url: https://github.com/cataluna84/lid#project-status
+    about: >
+      Larger refactors or new research directions are best filed
+      against the successor umbrella project (link TBA -- see the
+      "Project status" banner in this repository's README).
+  - name: Security vulnerability (private channel)
+    url: https://github.com/cataluna84/lid/security/advisories/new
+    about: >
+      Please do NOT open a public issue for security problems. Use the
+      "Report a vulnerability" button on the Security tab.

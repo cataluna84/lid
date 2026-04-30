@@ -1,0 +1,112 @@
+name: Bug report
+description: Report a defect in the lid pipelines (training, inference, benchmarking, notebooks).
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in
+        each section below; the more reproducible the report, the faster
+        we can fix it.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear, one-paragraph description of the bug.
+      placeholder: "lid-bench fails with ... when running configs/bench_grid.yaml ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: |
+        The exact commands you ran, in order. Prefer copy-paste over
+        prose. Mention any non-default flags, configs, or environment
+        overrides.
+      placeholder: |
+        1. `cp .env.example .env` and filled in HF_TOKEN, WANDB_API_KEY
+        2. `make dev`
+        3. `uv run lid-bench configs/bench_quick.yaml --no-wandb`
+      render: bash
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      placeholder: "Expected the eager and vectorized rows in the summary table with throughput ~14 / ~70 sps."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour (logs / traceback)
+      description: |
+        Paste the relevant stderr / traceback. Trim or anonymise file
+        paths if they contain personal data.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU model + driver
+      placeholder: "NVIDIA H100 80 GB HBM3, driver 555.00"
+    validations:
+      required: false
+
+  - type: input
+    id: cuda
+    attributes:
+      label: CUDA toolkit version
+      placeholder: "12.8"
+    validations:
+      required: false
+
+  - type: input
+    id: torch
+    attributes:
+      label: torch version
+      description: Output of `uv run python -c "import torch; print(torch.__version__)"`.
+      placeholder: "2.11.0+cu128"
+    validations:
+      required: true
+
+  - type: input
+    id: uv
+    attributes:
+      label: uv + Python versions
+      description: Output of `uv --version` and `python3 --version`.
+      placeholder: "uv 0.4.x; Python 3.12.13"
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: lid commit
+      description: Output of `git rev-parse --short HEAD`.
+      placeholder: "31b09cb"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extras
+    attributes:
+      label: Anything else (optional)
+      description: Screenshots, related W&B run URLs, prior debugging notes.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct.
+          required: true

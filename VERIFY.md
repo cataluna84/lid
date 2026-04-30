@@ -9,6 +9,13 @@ Deterministic, machine-readable verification contracts for the `lid`
 repo. Each check specifies **the exact command**, **the expected exit
 code**, and **an expected output pattern**.
 
+> **Status (2026-04-30):** the repository is **public** under
+> Apache-2.0. The checks below are stable across the public-release
+> sweep; the only post-release behavioural change is that the
+> `1024m/LID` HuggingFace dataset is now **gated** (request access on
+> the dataset page) rather than fully private -- `HF_TOKEN`-based
+> access still works for everyone with approved access.
+
 Run the entire suite with:
 
 ```bash
@@ -83,8 +90,9 @@ This requires GPU + HF token + W&B key; not part of `make verify`.
 |---|---|---|---|
 | HF dataset loads | `uv run python -c "from datasets import load_dataset; d = load_dataset('1024m/LID', data_files='Data_Hackathon/LID-1000.parquet'); print(sorted(d.keys()))"` | 0 | `['train']` |
 
-Requires `HF_TOKEN` in `.env`. If this fails with `403`, check that your
-token has read access to the private `1024m/LID` dataset.
+Requires `HF_TOKEN` in `.env`. If this fails with `403`, check that
+your token has been granted access to the **gated** `1024m/LID`
+dataset (request access on the dataset's HuggingFace page).
 
 ## Section 6 — W&B connectivity
 

@@ -8,6 +8,15 @@ tags: [notebooks, unsloth, jupyter, nbstripout, xlm-roberta]
 Scope: every `.ipynb` under `notebooks/`. Inherits rules from the root
 `AGENTS.md`; this file adds notebook-specific constraints.
 
+> The repository is **public** under Apache-2.0. The notebook ladder
+> (Regex → Unicode-Blocks → N-grams → Embedding → Layer-wise
+> Vibecoded) is described for newcomers in
+> [`README.md`](../README.md#notebooks); a recipe for adding a new
+> notebook lives in
+> [`CONTRIBUTING.md`](../CONTRIBUTING.md#how-to-add-a-new-notebook).
+> This file is the AI-agent / maintainer-facing version with the
+> three required bug-fix shims that **must not** be removed.
+
 ## Dependencies
 
 - The embedding-classifier notebook requires the `unsloth` extras group.

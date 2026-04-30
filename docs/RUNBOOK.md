@@ -4,11 +4,22 @@
 > Run them **in order**. Each step prints a results table; record the
 > numbers before moving to the next step.
 >
+> **Status (2026-04-30):** the repository is **public** under
+> Apache-2.0; commands and numbers below are reproducible with
+> the `1024m/LID` HuggingFace dataset (gated -- request access on
+> the dataset page). For the documentation lineage that motivated
+> these experiments, see
+> [`README.md`](../README.md#project-genesis-and-document-lineage).
+>
 > **W&B Central Hub:** All steps log to a single W&B project (`lid-bench`)
 > so that every run -- including the baseline -- can be compared in one
 > dashboard.  Set the Step 1 baseline run as "baseline" in W&B to see
 > automatic metric deltas on every subsequent run.  Add `--no-wandb` to
-> any command to skip W&B logging for quick local-only iteration.
+> any command to skip W&B logging for quick local-only iteration. The
+> recorded run URLs in `experiments/EXPERIMENT_LOG.md` live under
+> `wandb.ai/cataluna84/lid-bench` (read-only); set
+> `WANDB_ENTITY=<your-entity>` in your `.env` so your own runs land in
+> your own namespace.
 
 ---
 
@@ -16,13 +27,15 @@
 
 ```bash
 # 0a. Clone and enter the repo
-git clone git@github.com:cataluna84/lid.git && cd lid
+git clone https://github.com/cataluna84/lid.git && cd lid
 
 # 0b. Create .env with your tokens
 cp .env.example .env
 # Open .env and fill in:
 #   HF_TOKEN=hf_...
-#   WANDB_API_KEY=...       (required for W&B central hub; optional if using --no-wandb)
+#   WANDB_API_KEY=...                (required for W&B; optional with --no-wandb)
+#   WANDB_ENTITY=<your-entity>       (optional; defaults to your wandb login)
+#   WANDB_PROJECT=lid-bench          (optional; default value)
 
 # 0c. Install all dependencies (Python 3.12, PyTorch 2.11, CUDA 13.0)
 make dev

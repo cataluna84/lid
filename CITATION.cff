@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite it as below."
+title: "LID -- Layer-Wise Multilingual Language Identification in Compact Foundation Models"
+abstract: >
+  Open-source research artifact accompanying a study of layer-wise
+  language identification in compact (0--4 B parameter) foundation
+  models across 67 languages. Provides a training pipeline (LoRA,
+  optional INT8/INT4 quantization), a vectorised layer-wise inference
+  pipeline, an extensible benchmarking framework that compares nine
+  optimization strategies (eager, vectorised, torch.compile, SDPA,
+  Flash Attention 2, INT8/INT4 via bitsandbytes, and combined
+  strategies), W&B and local-filesystem result logging, and analysis
+  notebooks (Unicode-block, n-gram, and embedding-classifier
+  baselines).
+type: software
+authors:
+  - family-names: Bhaskar
+    given-names: Mayank
+    email: mayankbhaskar007@gmail.com
+keywords:
+  - language-identification
+  - multilingual-NLP
+  - mechanistic-interpretability
+  - transformer
+  - benchmark
+  - quantization
+  - pytorch
+  - huggingface
+  - low-resource-languages
+license: Apache-2.0
+version: "0.1.0"
+date-released: "2026-04-30"
+repository-code: "https://github.com/cataluna84/lid"
+url: "https://github.com/cataluna84/lid"
+identifiers:
+  # When a Zenodo DOI is minted via the GitHub-Zenodo integration on the
+  # v0.1.0 release tag, replace this placeholder with the issued DOI.
+  - type: other
+    value: "TBA"
+    description: "Zenodo DOI (to be assigned on v0.1.0 release)"
+# No paper is currently in submission. Cite the software entry above.
+# A natural future paper based on this artifact is sketched in
+# `docs/paperback.md` -- if such a paper is later written and published,
+# replace this comment with a `preferred-citation:` block.

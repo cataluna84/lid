@@ -1,5 +1,5 @@
 ---
-description: Layer-wise multilingual language ID research repo (67 langs, ARR May 2026). Python 3.12 + uv + PyTorch CUDA 12.8 + unsloth.
+description: Layer-wise multilingual language ID research repo (67 langs, public Apache-2.0 artifact). Python 3.12 + uv + PyTorch CUDA 12.8 + unsloth.
 tags: [python, uv, pytorch-cu128, transformers, unsloth, wandb, lid, notebook]
 ---
 
@@ -10,7 +10,15 @@ Read this first, every session.
 
 > LID (layer-wise language identification) is a mechanistic-interpretability
 > research project for multilingual LID in compact foundation models
-> (0–4B params). Paper target: ARR May 2026 cycle.
+> (0–4B params). The repository is **public** under Apache-2.0 and has
+> been released as a finished artifact -- the active research surface
+> is the maintenance + reproducibility surface, not net-new
+> experiments.
+>
+> No paper is currently in submission. The genesis proposal lives at
+> `docs/proposal_original.md`, its extension at
+> `docs/project_proposal.md`, and a forward-looking research-direction
+> document for anyone continuing this work lives at `docs/paperback.md`.
 
 ## Memory system (external memory, per tip 10)
 
@@ -205,9 +213,29 @@ directly (progressive disclosure — do not inline them):
 
 ## Repo-local pointers
 
+Documentation lineage (genesis → extension → forward-looking):
+
+- `docs/proposal_original.md` — **canonical source** proposal.
+  Twelve research questions, original framing, reading list. Treat
+  as the historical genesis document.
+- `docs/project_proposal.md` — extended proposal with publishability
+  assessment + experimental-design table.
+- `docs/paperback.md` — venue-agnostic, deadline-agnostic
+  forward-looking research-direction document; twelve well-scoped
+  experiments (E1–E12), 9-model cohort, ~50-ref literature map,
+  phased dependency graph.
+
+Operational pointers:
+
 - `docs/RUNBOOK.md` — step-by-step experiment runbook (phases 1–11).
-- `docs/project_proposal.md` — research scope + questions + related work.
-- `docs/optimization_spec.md` — optimization strategy spec.
-- `CONTRIBUTING.md` — full coding standards and PR workflow (canonical;
-  this file is the distilled Do/Don't version).
-- `README.md` — user-facing overview.
+- `docs/optimization_spec.md` — optimization strategy spec
+  (problem analysis, architecture, per-strategy mathematics, W&B
+  integration, metrics taxonomy).
+- `experiments/EXPERIMENT_LOG.md` — recorded H100 80 GB run log
+  (steps 1–7 with exact W&B run URLs and metric tables).
+- `CONTRIBUTING.md` — full coding standards, PR workflow, recipes
+  (canonical contributor-facing rules; this file is the distilled
+  Do/Don't version for AI agents).
+- `notebooks/AGENTS.md` — notebook-specific gotchas (the three bug-
+  fix shims, nbstripout, kernel selection, dependency groups).
+- `README.md` — public user-facing overview.

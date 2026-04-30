@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+if TYPE_CHECKING:
+    from transformers import PreTrainedModel
+    from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from lid.bench.strategy import InferenceStrategy, StrategyRegistry
 
@@ -15,18 +21,16 @@ class EagerStrategy(InferenceStrategy):
         model_name: str,
         dtype: str,
         device: str = "cuda",
-    ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
         torch_dtype = torch.bfloat16 if dtype == "bf16" else torch.float16
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name, torch_dtype=torch_dtype
-        ).to(device)
+        model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch_dtype).to(device)
         return model, tokenizer
 
     def extract_layer_probs(
         self,
-        model: AutoModelForCausalLM,
-        tokenizer: AutoTokenizer,
+        model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizerBase,
         prompts: list[str],
         valid_options: list[str],
         token_ids: torch.Tensor,

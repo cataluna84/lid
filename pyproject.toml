@@ -5,9 +5,10 @@ build-backend = "hatchling.build"
 [project]
 name = "lid"
 version = "0.1.0"
-description = "Layer-Wise Dynamics of Multilingual Language Identification in Compact Foundation Models"
+description = "Layer-wise dynamics of multilingual language identification (67 languages) in compact foundation models — training, layer-wise inference, optimization-strategy benchmarks, and analysis."
 readme = "README.md"
-license = { text = "MIT" }
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.12.13,<3.13"
 authors = [
     { name = "Mayank Bhaskar", email = "mayankbhaskar007@gmail.com" },
@@ -17,16 +18,23 @@ keywords = [
     "multilingual",
     "mechanistic-interpretability",
     "transformer",
+    "benchmark",
+    "quantization",
+    "torch-compile",
+    "flash-attention",
     "NLP",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
 ]
+
 dependencies = [
     "torch>=2.11.0",
     "transformers>=5.0.0",
@@ -67,6 +75,13 @@ unsloth = [
     "trl",
     "torchvision",
 ]
+
+[project.urls]
+Homepage      = "https://github.com/cataluna84/lid"
+Repository    = "https://github.com/cataluna84/lid"
+Issues        = "https://github.com/cataluna84/lid/issues"
+Changelog     = "https://github.com/cataluna84/lid/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/cataluna84/lid/tree/main/docs"
 
 [project.scripts]
 lid-train = "lid.train:main"
@@ -142,6 +157,15 @@ python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+
+# transformers + torch.compile + wandb upstream type stubs are noisy
+# (e.g. AutoModelForCausalLM.from_pretrained is typed as accepting a model
+# instance, not a model id string). Suppress import-level noise so our
+# in-repo type errors stay visible.
+[[tool.mypy.overrides]]
+module = ["transformers.*", "wandb.*", "yaml"]
+ignore_missing_imports = true
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

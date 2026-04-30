@@ -54,7 +54,7 @@ def postprocess(df: pd.DataFrame) -> pd.DataFrame:
                 for k, v in layer_content.items()
                 if k.startswith("norm_prob_")
             }
-            best_label = max(probs, key=probs.get)
+            best_label = max(probs, key=lambda k: probs[k])
             best_val = probs[best_label]
             max_row_dict[layer] = {"label": best_label, "prob": float(best_val)}
             prob_row_list.append(float(layer_content.get(f"norm_prob_{actual_iso}", 0.0)))

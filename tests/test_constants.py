@@ -1,4 +1,4 @@
-from lid.constants import LANG_TO_ISO, VALID_OPTIONS, LANG_CODES_BLOCK
+from lid.constants import LANG_CODES_BLOCK, LANG_TO_ISO, VALID_OPTIONS
 
 
 def test_lang_to_iso_count():
@@ -6,7 +6,7 @@ def test_lang_to_iso_count():
 
 
 def test_valid_options_sorted():
-    assert VALID_OPTIONS == sorted(VALID_OPTIONS)
+    assert sorted(VALID_OPTIONS) == VALID_OPTIONS
 
 
 def test_all_iso_codes_three_chars():

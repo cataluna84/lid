@@ -14,7 +14,7 @@ class WandbBenchLogger:
         self._project = project
         self._group = group
         self._enabled = enabled
-        self._run = None
+        self._run: Any = None
 
     def init_run(self, config: RunConfig) -> None:
         """Initialize a new W&B run for a benchmark config."""
@@ -67,17 +67,23 @@ class WandbBenchLogger:
         for i, (acc, prob) in enumerate(zip(layer_accs, layer_probs, strict=False)):
             table.add_data(i + 1, acc, prob)
 
-        self._run.log({
-            "layer_accuracy_table": table,
-            "layer_accuracy_curve": wandb.plot.line(
-                table, "layer_idx", "accuracy",
-                title=f"Layer Accuracy: {strategy}",
-            ),
-            "layer_prob_curve": wandb.plot.line(
-                table, "layer_idx", "avg_correct_prob",
-                title=f"Correct-Class Prob: {strategy}",
-            ),
-        })
+        self._run.log(
+            {
+                "layer_accuracy_table": table,
+                "layer_accuracy_curve": wandb.plot.line(
+                    table,
+                    "layer_idx",
+                    "accuracy",
+                    title=f"Layer Accuracy: {strategy}",
+                ),
+                "layer_prob_curve": wandb.plot.line(
+                    table,
+                    "layer_idx",
+                    "avg_correct_prob",
+                    title=f"Correct-Class Prob: {strategy}",
+                ),
+            }
+        )
 
     def log_summary_table(self, results: list[dict[str, Any]]) -> None:
         """Log the full benchmark summary table."""
@@ -87,10 +93,17 @@ class WandbBenchLogger:
         import wandb
 
         columns = [
-            "strategy", "dtype", "batch_size", "max_length",
-            "throughput_sps", "latency_ms", "gpu_mem_peak_mb",
-            "energy_per_sample_mj", "accuracy_last_layer",
-            "wall_sec", "mfu_pct",
+            "strategy",
+            "dtype",
+            "batch_size",
+            "max_length",
+            "throughput_sps",
+            "latency_ms",
+            "gpu_mem_peak_mb",
+            "energy_per_sample_mj",
+            "accuracy_last_layer",
+            "wall_sec",
+            "mfu_pct",
         ]
         table = wandb.Table(columns=columns)
         for r in results:
@@ -143,7 +156,7 @@ class WandbBenchLogger:
     @property
     def run_url(self) -> str:
         if self._run is not None:
-            return self._run.url
+            return str(self._run.url)
         return ""
 
     @property

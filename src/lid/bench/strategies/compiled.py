@@ -8,7 +8,8 @@ from lid.bench.strategies.vectorized import VectorizedStrategy
 from lid.bench.strategy import StrategyRegistry
 
 if TYPE_CHECKING:
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from transformers import PreTrainedModel
+    from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 
 @StrategyRegistry.register("compiled")
@@ -20,7 +21,7 @@ class CompiledStrategy(VectorizedStrategy):
         model_name: str,
         dtype: str,
         device: str = "cuda",
-    ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
         model, tokenizer = super().load_model(model_name, dtype, device)
         model = torch.compile(model, mode="reduce-overhead")
         return model, tokenizer

@@ -2,8 +2,20 @@
 
 > **Version:** 1.0
 > **Authors:** Mayank Bhaskar
-> **Date:** 2026-04-16
-> **Status:** Approved
+> **Date:** 2026-04-16 (status callout updated 2026-04-30)
+> **Status:** Approved (and **implemented** -- the spec below
+> describes the design that ships in `src/lid/bench/` today).
+>
+> This is the design document for the optimisation framework that
+> lives in `src/lid/bench/`. It complements the research-framing
+> documents:
+>
+> - [`proposal_original.md`](proposal_original.md) -- genesis proposal.
+> - [`project_proposal.md`](project_proposal.md) -- extended proposal.
+> - [`paperback.md`](paperback.md) -- forward-looking research roadmap.
+>
+> See [`README.md`](../README.md#project-genesis-and-document-lineage)
+> for the full lineage.
 
 ---
 

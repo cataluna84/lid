@@ -1,6 +1,20 @@
 # Project Proposal: Layer-Wise Dynamics of Multilingual Language Identification in Compact Foundation Models
 
-> Living document for collaborators -- last updated 2026-04-16
+> Living document for collaborators -- last updated 2026-04-30
+>
+> **Status:** this is the *extended* proposal in the project's
+> documentation lineage. See [`README.md`](../README.md#project-genesis-and-document-lineage)
+> for the full chain:
+>
+> - **Source:** [`proposal_original.md`](proposal_original.md) -- the
+>   genesis proposal (twelve research questions, original framing,
+>   reading list).
+> - **This file:** the extended proposal -- adds publishability
+>   assessment, experimental-design table, and explicit pointers
+>   into the codebase.
+> - **Forward-looking:** [`paperback.md`](paperback.md) -- a
+>   venue/deadline-agnostic research-direction document for
+>   anyone continuing this line of work.
 
 ## Abstract
 
@@ -32,7 +46,7 @@ This project investigates the **layer-wise dynamics** of how compact foundation 
 
 ## Publishability Assessment
 
-This is a **publishable research direction** if framed as a systematic empirical study rather than just a model improvement. There is no comprehensive layer-wise analysis of representation formation, quantization effects, and high-class (100+ language) behavior within compact foundation models under controlled settings. A depth-aware evaluation combined with structured error analysis (same-script confusion, low-resource performance, compression sensitivity) would constitute a novel and externally shareable contribution. Target venue: **ARR submission (May 2026 cycle)** or industry/tutorials track.
+This is a **publishable research direction** if framed as a systematic empirical study rather than just a model improvement. There is no comprehensive layer-wise analysis of representation formation, quantization effects, and high-class (100+ language) behavior within compact foundation models under controlled settings. A depth-aware evaluation combined with structured error analysis (same-script confusion, low-resource performance, compression sensitivity) would constitute a novel and externally shareable contribution. Suitable venues range from ACL / EMNLP / TACL to NeurIPS / ICLR workshops on multilingual NLP and mechanistic interpretability; venue choice is left to whoever pursues the writeup. See `docs/paperback.md` for a fuller research roadmap.
 
 ---
 

@@ -4,6 +4,7 @@ import subprocess
 import threading
 import time
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -111,8 +112,8 @@ class MetricsCollector:
     _infer_start: float = 0.0
     _infer_end: float = 0.0
     _postproc_start: float = 0.0
-    _cuda_start: object = None
-    _cuda_end: object = None
+    _cuda_start: Any = None
+    _cuda_end: Any = None
     _model_mem_bytes: float = 0.0
     _poller: _NvidiaSmiPoller = field(default_factory=_NvidiaSmiPoller)
     _has_cuda: bool = False

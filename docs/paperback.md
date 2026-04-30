@@ -1,15 +1,39 @@
-# DO — Layer-Wise Multilingual LID in Compact Foundation Models
+# Paperback — Layer-Wise Multilingual LID in Compact Foundation Models
 
-> Research execution plan for **ARR May 2026** submission (long paper).
-> Authors: Mayank Bhaskar et al. Version 0.1 (draft for colleague review).
-> Last updated 2026-04-17.
+> **Forward-looking research-direction document.**
+> Authors: Mayank Bhaskar (initial draft); contributors welcome.
+> Version 0.2 -- generalized from the original execution plan for an
+> independent reader.
 
-> **Status.** This is a *planning* document, not an implementation log.
-> Nothing here has been coded yet. The plan assembles (a) the completed
-> Exa Deep Research synthesis (task id `r_01kpde4dn7tt1bhfd3175gajkw`),
-> (b) targeted Exa/Ref literature queries from 2024--2026, and (c) the
-> current repo state (`AGENTS.md`, `docs/project_proposal.md`,
-> `docs/RUNBOOK.md`, `docs/optimization_spec.md`, `PLAN.md`).
+> ## Status
+>
+> This document is a **research vision and roadmap**, not an active
+> project plan with deadlines. It is published alongside the public
+> release of the [`lid` repository](../README.md) so that any future
+> researcher who wants to **continue** this line of work has a
+> self-contained map of the thesis, open questions, model cohort,
+> dataset cohort, evaluation protocol, and the twelve experiments
+> (E1--E12) that would naturally extend the existing artifact.
+>
+> The companion [umbrella project (link TBA in
+> `README.md`)](../README.md#project-status----in-transition) is the
+> long-term home for this work. If you are reading this without
+> context, treat it as a literature-grounded design space:
+> *the current repository ships the infrastructure (training,
+> layer-wise inference, 9-strategy bench, four classifier notebooks);
+> this document tells you what an ambitious researcher could build on
+> top.*
+>
+> Nothing in §10 (Experiments E1--E12) has been implemented in this
+> repository -- they are well-scoped proposals. The literature map
+> (§9) and infrastructure design (§11) are intended to make starting
+> any one of them tractable in a few weeks rather than months.
+>
+> The document was originally drafted as an internal execution plan
+> dated 2026-04-17 (see `docs/memory-archive/` if you want the
+> historical version). All paper-deadline framing has been removed
+> in this public version; if a future researcher wants to write a
+> paper, §15 sketches a natural outline.
 
 ---
 
@@ -40,8 +64,8 @@
 11. [Cross-Experiment Shared Infrastructure](#11-cross-experiment-shared-infrastructure)
 12. [Dataset Splits, Cards, and Release Plan](#12-dataset-splits-cards-and-release-plan)
 13. [Artifact and HF Hub Release Plan](#13-artifact-and-hf-hub-release-plan)
-14. [Timeline (6 weeks to ARR deadline)](#14-timeline-6-weeks-to-arr-deadline)
-15. [Paper Outline](#15-paper-outline-arr-long-paper-8--unlimited-refs)
+14. [Phasing dependencies and effort estimate](#14-phasing-dependencies-and-effort-estimate)
+15. [Suggested paper outline](#15-suggested-paper-outline-if-a-paper-is-pursued)
 16. [Reproducibility Checklist](#16-reproducibility-checklist)
 17. [Open Questions for Review](#17-open-questions-for-review)
 18. [References (short, 2024--2026)](#18-references-short-20242026)
@@ -134,7 +158,7 @@ mechanistic interventions.
 ## 4. Model Cohort
 
 All three families are Apache-2.0 open-weight; this is a hard
-constraint for an ARR-reproducible submission. Shaded rows are the
+constraint for any reproducible public release. Shaded rows are the
 **training targets**; unshaded rows are **inference-only baselines**.
 
 ### 4.1 Tiny Aya family (baseline — Cohere Labs)
@@ -1083,54 +1107,87 @@ huggingface.co/datasets/cataluna84/LID-67-contamination-audit-v1
 
 One benchmark card per experiment (E1-E12) in `benchmarks/eN/CARD.md`.
 
-### 13.3 Paper artefacts
+### 13.3 Optional paper artefacts (if a paper is later pursued)
 
-* `paper/main.tex` — ACL / ARR 2026 style.
+* `paper/main.tex` — ACL / EMNLP / TACL or generic LaTeX style.
 * `paper/figures/` — produced by `experiments/eN/plot_*.py`.
 * `paper/supplement.pdf` — long appendix.
-* `zenodo/` — DOI-referenced snapshot of experiments/ at submission
-  time.
+* `zenodo/` — DOI-referenced snapshot of `experiments/` at any
+  release point.
+
+The original 2026 draft was scoped against a specific submission
+window; that framing has been removed. Future researchers can pick
+their own venue (or no venue at all — a Hugging Face dataset card
+plus a tagged GitHub release is a perfectly legitimate artefact).
 
 ---
 
-## 14. Timeline (6 Weeks to ARR Deadline)
+## 14. Phasing, Dependencies, and Effort Estimate
 
-Assumes ARR May 2026 cycle close ~Apr 30 2026 (hard stop). Today is
-2026-04-17 — **13 calendar days to internal code freeze**, plus
-~2 weeks of writing / camera-ready buffer.
+This section replaces the original Gantt chart, which was tied to a
+specific submission deadline. Here we instead lay out **logical
+dependencies** between experiments and a rough **effort estimate**
+(in H100-hours) so that someone picking this up later can pick a
+self-contained slice that matches their compute budget.
 
-| Week | Work | Deliverables |
-|---|---|---|
-| W1 (Apr 17--23) | Spec approval; scaffolding; E8 contamination first | `docs/do.md` merged, `src/lid/audit/` in place, contamination scores for 67 langs |
-| W2 (Apr 24--30) | E1 Atlas pilot on 3 models → scale-out; E3 quant sensitivity scoring | atlas first-pass; quant ILP for Tiny Aya |
-| W3 (May 1--7) | E2 circuit discovery (Tiny Aya); E4 script-first router | circuits-v1, router-v1 |
-| W4 (May 8--14) | E5, E6, E7 parallel; E11 trajectory runs | code-mix results, ORPO/β-DPO/SimPO, rank transfer |
-| W5 (May 15--21) | E9 pruning; E10 elastic inference; E12 metric stress | Pareto plots, elastic-LID result, metric stress |
-| W6 (May 22--28) | Writing + replication runs + HF Hub uploads | paper draft v1, checkpoints public, benchmark cards |
-| Buffer | May 29--31 | camera-ready polish |
-
-**Gantt (text):**
+### 14.1 Dependency graph
 
 ```
-              W1      W2      W3      W4      W5      W6
-E1 Atlas      ==================
-E2 Circuits           ==================
-E3 Quant      ==================
-E4 Router              ============
-E5 Code-mix                     ========
-E6 PrefOpt                      ========
-E7 Transfer                     ====
-E8 Contam.    ====
-E9 Pruning                              ========
-E10 Elastic                             ========
-E11 Traject.                    ================
-E12 Metric                              ========
-Writing                                         ================
+E8 (contamination audit, ~20 H100h)  → independent, runs first
+                                       so all downstream work can
+                                       weight by (1 − contamination_rate)
+
+E1 (layer atlas, ~120 H100h)         → independent, baseline for
+                                       E2 / E7 / E9 / E11
+
+E2 (circuit discovery, ~80 H100h)    → depends on E1
+E7 (rank transfer, ~30 H100h)        → depends on E1 across ≥2 models
+E11 (trajectories, ~70 H100h)        → depends on E1 + saved LoRA
+                                       checkpoints
+
+E3 (layer-wise quant, ~50 H100h)     → depends on E1 (sensitivity)
+E9 (circuit-aware prune, ~60 H100h)  → depends on E1 + E2
+
+E4 (script-first router, ~15 H100h)  → independent, script-routing
+                                       is unicode-only at training time
+E5 (code-mix, ~25 H100h)             → independent of E1; benefits
+                                       from E2 for analysis
+E6 (preference optimisation, ~40
+    H100h × 3 objectives = ~120)     → independent training budget;
+                                       reuses LoRA infra from `lid-train`
+E10 (elastic inference, ~40 H100h)   → independent
+E12 (metric stress, ~18 H100h)       → depends on outputs from E1--E10
+                                       (mostly post-hoc)
 ```
+
+### 14.2 Suggested slicing for partial effort
+
+If you have budget for **only ~150 H100-hours**, run E8 + E1 + E4 +
+E12 — that gives a contamination audit, a layer atlas, a
+script-aware router, and a multi-metric evaluation, which together
+already form a publishable "what does compact-multilingual-LID
+*really* look like?" study.
+
+If you have **~400 H100-hours**, add E2 + E3 + E9 — that is the
+full mechanistic-to-compression story (atlas → circuits →
+sensitivity-aware quantisation → circuit-aware pruning).
+
+If you have **~700+ H100-hours**, run the full E1--E12.
+
+### 14.3 Notes on parallelism
+
+- E1, E4, E5, E6, E8 are independent and can run in parallel.
+- E2, E7, E9, E11 all depend on E1 and should be staged after the
+  first atlas pass is committed.
+- E12 is last because it consumes outputs from earlier experiments.
+
+The original timeline (six weeks against an ARR cycle) is
+preserved in `git log` if anyone wants to see the historical
+phasing — but it is not authoritative for any future work.
 
 ---
 
-## 15. Paper Outline (ARR long paper, 8 + unlimited refs)
+## 15. Suggested Paper Outline (if a paper is pursued)
 
 1. **Abstract** — what, why, how, claims (3 main results + artifact release).
 2. **Introduction** — LID is gateway, models are compact, gap between
@@ -1153,9 +1210,10 @@ Writing                                         ================
     considerations for LID.
 15. **Reproducibility** — §16.
 
-*Additional artefact* — a *standalone 6-page demo paper* for EMNLP
-Demos 2026 ("`lid-bench`: an elastic layer-aware LID toolkit") reusing
-§11 infra.
+*Additional artefact (optional)* — a *standalone 6-page demo paper*
+for any demo track that fits ("`lid-bench`: an elastic layer-aware
+LID toolkit") reusing §11 infra. The current public repo already
+satisfies most of the demo-paper requirements as-is.
 
 ---
 
@@ -1185,44 +1243,48 @@ Per ACL Responsible-Research-Checklist:
 
 ---
 
-## 17. Open Questions for Review
+## 17. Open Questions for a Future Researcher
 
-Explicit questions that we should answer before freezing the plan.
+These are the open design choices that anyone continuing this line
+of work should think through. None is a deadline-blocker; they are
+honest unknowns from the original draft.
 
-* **OQ1** — Is the 9-model × 12-experiment scope actually runnable in
-  ~523 H100-hours? The main risk is E2 (patching) and E9 (pruning).
-  Backup plan: drop Qwen 3.5-2B from E2/E9 (keep only 0.8B and 4B).
-* **OQ2** — Gemma 4 weights may be gated at run time. Fallback to
-  Gemma 3 4B / 1B is documented in §8.4 but would weaken the novelty.
-  Status check 3 days before W1 freeze.
-* **OQ3** — Should we include *Aya Expanse 8B* as a bigger
-  multilingual baseline? It's Cohere, 101 languages, Apache 2.0.
-  Would add ~30 H100-hours.
-* **OQ4** — Is a 6-week compressed timeline realistic given the paper
-  is 8 pages + supplement? Tradeoff: strip E10 (elastic) and E12
-  (metric stress) if writing runs long — both are *standalone*
-  stories we can release as follow-ups.
-* **OQ5** — Are we comfortable committing the headline result to
-  being "circuit-aware pruning > magnitude pruning"? If E9 fails,
-  E3 + E4 still stand as a coherent paper.
-* **OQ6** — Should we pre-register E11 (H1/H2/H3) on OSF? Adds 2
-  days, increases credibility.
+* **OQ1** — Is the 9-model × 12-experiment scope actually runnable
+  in ~523 H100-hours? The main risk is E2 (patching) and E9
+  (pruning). Sensible scope-cut: drop Qwen 3.5-2B from E2/E9 (keep
+  only 0.8B and 4B).
+* **OQ2** — Gemma 4 weights may be gated at run time depending on
+  Google's release policy. Fallback to Gemma 3 4B / 1B is documented
+  in §8.4 but would weaken the cross-architecture story.
+* **OQ3** — Worth including *Aya Expanse 8B* as a bigger
+  multilingual baseline? Cohere, 101 languages, Apache 2.0. Would
+  add ~30 H100-hours.
+* **OQ4** — How much do you want to write up vs. ship as code? E10
+  (elastic) and E12 (metric stress) are *standalone* stories that
+  could be released as follow-up notes or blog posts even if no full
+  paper is written.
+* **OQ5** — How strong is your prior that "circuit-aware pruning >
+  magnitude pruning"? If E9 fails to show that, E3 + E4 still stand
+  as a coherent compression-and-routing story.
+* **OQ6** — Pre-register E11 (H1/H2/H3) on OSF? Adds ~2 days,
+  increases credibility.
 * **OQ7** — Licence for curated code-mix splits (§12.2)? CC-BY-SA-4.0
-  is default but some Indic sources are restricted.
-* **OQ8** — Speech-derived LID via Mozilla Common Voice: in-scope (E5)
-  or explicitly out-of-scope?
-* **OQ9** — Gated DeltaNet (Qwen 3.5) is not yet in mainline
-  `transformers`. If unsupported, do we skip Qwen 3.5 altogether or
-  vendor a compatible branch?
-* **OQ10** — Do we want a companion demo-track submission to EMNLP
-  Demos 2026 that packages `lid-bench` as a public tool?
+  is the default but some Indic sources are restricted.
+* **OQ8** — Speech-derived LID via Mozilla Common Voice: in-scope
+  (E5) or explicitly out-of-scope?
+* **OQ9** — Gated DeltaNet (Qwen 3.5) may not be in mainline
+  `transformers` at the time you pick this up. If unsupported, skip
+  Qwen 3.5 altogether or vendor a compatible branch.
+* **OQ10** — Worth packaging `lid-bench` as a standalone public tool
+  / demo-track submission? The infra in §11 is reusable as-is.
 
 ---
 
 ## 18. References (Short, 2024--2026)
 
-Core references grouped by theme. Full BibTeX in
-`paper/references.bib` at submission.
+Core references grouped by theme. Full BibTeX could live in
+`paper/references.bib` if a paper is later pursued; in the meantime
+the URLs / arXiv IDs below are sufficient to pull each work.
 
 **Mechanistic interpretability:**
 
@@ -1360,4 +1422,7 @@ Data release: all checkpoints uploaded to HF Hub with LoRA adapters
 
 ---
 
-*End of `docs/do.md` v0.1 — ready for colleague review.*
+*End of `docs/paperback.md` v0.2 — public research-direction
+document. The original v0.1 was an internal execution plan; this
+version is generalised for any future researcher continuing the
+work.*

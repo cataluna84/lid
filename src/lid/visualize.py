@@ -6,7 +6,6 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 FONT_SIZE = 12
 
 
@@ -61,15 +60,11 @@ def plot_per_language(df, output_dir: str):
 
 
 def plot_layer_accuracy(df, output_dir: str):
-    layer_keys = sorted(
-        k for k in df.iloc[0]["MAX"] if k.startswith("LAYER-")
-    )
+    layer_keys = sorted(k for k in df.iloc[0]["MAX"] if k.startswith("LAYER-"))
     accuracies = []
     for layer in layer_keys:
         correct = sum(
-            1
-            for _, row in df.iterrows()
-            if row["MAX"][layer]["label"] == row["ISO-693-3"]
+            1 for _, row in df.iterrows() if row["MAX"][layer]["label"] == row["ISO-693-3"]
         )
         accuracies.append(correct / len(df))
 

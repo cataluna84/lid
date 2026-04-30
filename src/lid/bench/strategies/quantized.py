@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import warnings
+from typing import TYPE_CHECKING
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
-warnings.filterwarnings("ignore", message="MatMul8bitLt.*cast from torch.bfloat16")
+if TYPE_CHECKING:
+    from transformers import PreTrainedModel
+    from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from lid.bench.strategies.vectorized import VectorizedStrategy
 from lid.bench.strategy import StrategyRegistry
+
+warnings.filterwarnings("ignore", message="MatMul8bitLt.*cast from torch.bfloat16")
 
 
 @StrategyRegistry.register("quantized_int8")
@@ -20,7 +25,7 @@ class QuantizedInt8Strategy(VectorizedStrategy):
         model_name: str,
         dtype: str,
         device: str = "cuda",
-    ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -39,7 +44,7 @@ class QuantizedInt4Strategy(VectorizedStrategy):
         model_name: str,
         dtype: str,
         device: str = "cuda",
-    ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(
             model_name,

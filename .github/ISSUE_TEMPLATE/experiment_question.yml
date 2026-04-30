@@ -1,0 +1,77 @@
+name: Experiment / reproducibility question
+description: Ask about reproducing a layer-wise inference, benchmark, or training run from this repo.
+title: "[experiment] "
+labels: ["question", "experiment"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please skim:
+
+        - `docs/RUNBOOK.md` -- step-by-step terminal commands.
+        - `experiments/EXPERIMENT_LOG.md` -- recorded runs + W&B links.
+        - The "Reproducibility caveats" section in `README.md`.
+
+        If your question is open-ended ("would X work?"), please use
+        Discussions instead.
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Which phase / step is the question about?
+      options:
+        - Step 1 -- baseline inference (lid-infer)
+        - Step 2 -- eager via bench framework
+        - Step 3 -- vectorized
+        - Step 4 -- compiled (torch.compile)
+        - Step 5 -- attention backends (sdpa / flash-attn)
+        - Step 6 -- quantization (int8 / int4)
+        - Step 7 -- combined strategies
+        - Step 9 -- full grid
+        - Step 10 -- training (lid-train)
+        - Step 11 -- visualization
+        - Notebook
+        - Other / cross-cutting
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What number / behaviour did you expect, and what did you get?
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command(s) you ran
+      render: bash
+    validations:
+      required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: GPU + memory
+      placeholder: "A100 80 GB, driver 555.00"
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Output / logs (optional)
+      description: |
+        Paste the bench summary line, the layer_accuracy.csv tail, or a
+        W&B run URL. Anonymise paths if needed.
+      render: shell
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct.
+          required: true

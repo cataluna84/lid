@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+if TYPE_CHECKING:
+    from transformers import PreTrainedModel
+    from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from lid.bench.strategies.vectorized import VectorizedStrategy
 from lid.bench.strategy import StrategyRegistry
@@ -16,7 +22,7 @@ class FlashAttnStrategy(VectorizedStrategy):
         model_name: str,
         dtype: str,
         device: str = "cuda",
-    ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
         torch_dtype = torch.bfloat16 if dtype == "bf16" else torch.float16
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(
@@ -36,7 +42,7 @@ class SDPAStrategy(VectorizedStrategy):
         model_name: str,
         dtype: str,
         device: str = "cuda",
-    ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
         torch_dtype = torch.bfloat16 if dtype == "bf16" else torch.float16
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(
