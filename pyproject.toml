@@ -37,16 +37,16 @@ classifiers = [
 
 dependencies = [
     "torch>=2.11.0",
-    "transformers>=5.0.0",
-    "datasets>=4.0.0",
-    "huggingface-hub>=1.7.0",
+    "transformers>=5.9.0",
+    "datasets>=4.8.5",
+    "huggingface-hub>=1.16.1",
     "tokenizers>=0.22.0",
     "safetensors>=0.7.0",
-    "numpy>=2.0",
-    "pandas>=2.2",
+    "numpy>=2.4.6",
+    "pandas>=3.0.3",
     "matplotlib>=3.9",
     "tqdm>=4.67",
-    "peft>=0.14.0",
+    "peft>=0.19.1",
     "accelerate>=1.5.0",
     "bitsandbytes>=0.45.0",
     "scikit-learn>=1.5.0",
@@ -94,11 +94,11 @@ lid-recommend = "lid.recommend:main"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.4.0",
+    "ruff>=0.15.14",
     "mypy>=1.10.0",
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",
-    "pre-commit>=3.7.0",
+    "pre-commit>=4.6.0",
     "ipykernel>=6.29.0",
     "jupyter>=1.0.0",
     "nbstripout>=0.7.0",
